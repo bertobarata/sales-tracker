@@ -1,57 +1,24 @@
 import { useEffect, useState } from 'react';
-import {
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-} from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
-
-// iOS PWA (standalone) perde o estado do redirect — usa popup
-const isIOSPWA = window.navigator.standalone === true;
-const isMobileBrowser = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !isIOSPWA;
 
 export default function AuthGate({ children }) {
   const [user, setUser] = useState(undefined);
-  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    let unsubscribe = () => {};
-
-    async function init() {
-      // Só tenta getRedirectResult se estivermos num browser mobile (não PWA)
-      if (isMobileBrowser) {
-        try {
-          await getRedirectResult(auth);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      unsubscribe = onAuthStateChanged(auth, (u) => {
-        setUser(u ?? null);
-        setChecking(false);
-      });
-    }
-
-    init();
-    return () => unsubscribe();
+    const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u ?? null));
+    return unsubscribe;
   }, []);
 
   async function handleLogin() {
     try {
-      if (isMobileBrowser) {
-        // Browser mobile → redirect (sem problemas de popup)
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        // Desktop ou iOS PWA → popup
-        await signInWithPopup(auth, googleProvider);
-      }
+      await signInWithPopup(auth, googleProvider);
     } catch (e) {
       console.error(e);
     }
   }
 
-  if (checking) {
+  if (user === undefined) {
     return <div className="auth-loading">A carregar...</div>;
   }
 
