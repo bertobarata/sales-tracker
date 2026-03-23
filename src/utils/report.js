@@ -9,6 +9,7 @@ export function generateWhatsAppText(totals, extra, weekStart, weekEnd) {
     `3.ªR ${totals.terceirasReunioesRealizadas}\n` +
     `Contratos ${extra.contratosFechados}\n` +
     `Valor ${Math.ceil(extra.valorTotalFechos)}€\n` +
+    `Pessoas seguras ${extra.pessoasSeguras}\n` +
     `Referências ${totals.referencias}\n\n` +
     `P. Semana\n` +
     `1.ª- ${extra.reunioes1aProxSemana ?? 0}\n` +
@@ -32,6 +33,7 @@ export function exportToExcel(weeklySummaries) {
     'Referências': s.totals.referencias,
     'Contratos Fechados': s.extra?.contratosFechados || 0,
     'Valor Fechos (€)': s.extra?.valorTotalFechos || 0,
+    'Pessoas Seguras': s.extra?.pessoasSeguras || 0,
     'Reuniões Próx. Semana': s.extra?.reunioesSemanaSeginte || 0,
   }));
 
@@ -43,7 +45,7 @@ export function exportToExcel(weeklySummaries) {
   ws['!cols'] = [
     { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 13 }, { wch: 13 },
     { wch: 13 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 },
-    { wch: 13 }, { wch: 18 }, { wch: 17 }, { wch: 22 },
+    { wch: 13 }, { wch: 18 }, { wch: 17 }, { wch: 17 }, { wch: 22 },
   ];
 
   XLSX.writeFile(wb, 'historico_vendas.xlsx');

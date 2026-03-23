@@ -8,13 +8,14 @@ const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 const EXTRA_FIELDS = [
   { key: 'contratosFechados', label: 'Contratos fechados' },
   { key: 'valorTotalFechos', label: 'Valor total (€)' },
+  { key: 'pessoasSeguras', label: 'Pessoas seguras' },
   { key: 'reunioes1aProxSemana', label: '1.ª próx. semana' },
   { key: 'reunioes2aProxSemana', label: '2.ª próx. semana' },
   { key: 'reunioes3aProxSemana', label: '3.ª próx. semana' },
 ];
 
 const INITIAL_EXTRA = {
-  contratosFechados: '', valorTotalFechos: '',
+  contratosFechados: '', valorTotalFechos: '', pessoasSeguras: '',
   reunioes1aProxSemana: '', reunioes2aProxSemana: '', reunioes3aProxSemana: '',
 };
 
@@ -51,6 +52,7 @@ export default function WeeklyReport({ uid }) {
     return {
       contratosFechados: parseInt(extra.contratosFechados) || 0,
       valorTotalFechos: parseFloat(extra.valorTotalFechos) || 0,
+      pessoasSeguras: parseInt(extra.pessoasSeguras) || 0,
       reunioes1aProxSemana: parseInt(extra.reunioes1aProxSemana) || 0,
       reunioes2aProxSemana: parseInt(extra.reunioes2aProxSemana) || 0,
       reunioes3aProxSemana: parseInt(extra.reunioes3aProxSemana) || 0,
@@ -111,8 +113,8 @@ export default function WeeklyReport({ uid }) {
       <div className="extra-fields">
         <h3>Esta semana</h3>
         {isMobile ? (
-          <div className="field-row">
-            {['contratosFechados', 'valorTotalFechos'].map(key => {
+          <div className="field-row three">
+            {['contratosFechados', 'valorTotalFechos', 'pessoasSeguras'].map(key => {
               const f = EXTRA_FIELDS.find(f => f.key === key);
               return (
                 <button key={key} className="field-tap" onClick={() => openNumpad(key)}>
@@ -123,7 +125,7 @@ export default function WeeklyReport({ uid }) {
             })}
           </div>
         ) : (
-          <div className="field-row">
+          <div className="field-row three">
             <div className="field-group">
               <label>Contratos fechados</label>
               <input type="number" min="0" value={extra.contratosFechados} onChange={e => setField('contratosFechados', e.target.value)} placeholder="0" />
@@ -131,6 +133,10 @@ export default function WeeklyReport({ uid }) {
             <div className="field-group">
               <label>Valor total (€)</label>
               <input type="number" min="0" value={extra.valorTotalFechos} onChange={e => setField('valorTotalFechos', e.target.value)} placeholder="0" />
+            </div>
+            <div className="field-group">
+              <label>Pessoas seguras</label>
+              <input type="number" min="0" value={extra.pessoasSeguras} onChange={e => setField('pessoasSeguras', e.target.value)} placeholder="0" />
             </div>
           </div>
         )}
