@@ -9,7 +9,8 @@ export function generateWhatsAppText(totals, extra, weekStart, weekEnd) {
     `3.ªR ${totals.terceirasReunioesRealizadas}\n` +
     `Contratos ${extra.contratosFechados}\n` +
     `Valor ${Math.ceil(extra.valorTotalFechos)}€\n` +
-    `Referências ${totals.referencias}\n\n` +
+    `Referências ${totals.referencias}\n` +
+    `Pessoas seguras ${extra.pessoasSeguras ?? 0}\n\n` +
     `P. Semana\n` +
     `1.ª- ${extra.reunioes1aProxSemana ?? 0}\n` +
     `2.ª- ${extra.reunioes2aProxSemana ?? 0}\n` +
@@ -32,6 +33,7 @@ export function exportToExcel(weeklySummaries) {
     'Referências': s.totals.referencias,
     'Contratos Fechados': s.extra?.contratosFechados || 0,
     'Valor Fechos (€)': s.extra?.valorTotalFechos || 0,
+    'Pessoas Seguras': s.extra?.pessoasSeguras || 0,
     'Reuniões Próx. Semana': s.extra?.reunioesSemanaSeginte || 0,
   }));
 
