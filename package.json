@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "git push origin master && vercel --prod"
+    "deploy": "git push origin main && vercel --prod"
   },
   "dependencies": {
     "firebase": "^12.11.0",
