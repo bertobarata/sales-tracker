@@ -4,39 +4,46 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  signOut,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+// iOS PWA (standalone) perde o estado do redirect — usa popup
+const isIOSPWA = window.navigator.standalone === true;
+const isMobileBrowser = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && !isIOSPWA;
 
 export default function AuthGate({ children }) {
-  // null = não autenticado, undefined = a verificar
   const [user, setUser] = useState(undefined);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    // Verifica se voltámos de um redirect do Google
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) setUser(result.user);
-      })
-      .catch(console.error)
-      .finally(() => {
-        // Após verificar redirect, subscreve auth state normalmente
-        const unsub = onAuthStateChanged(auth, (u) => {
-          setUser(u ?? null);
-          setChecking(false);
-        });
-        return unsub;
+    let unsubscribe = () => {};
+
+    async function init() {
+      // Só tenta getRedirectResult se estivermos num browser mobile (não PWA)
+      if (isMobileBrowser) {
+        try {
+          await getRedirectResult(auth);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      unsubscribe = onAuthStateChanged(auth, (u) => {
+        setUser(u ?? null);
+        setChecking(false);
       });
+    }
+
+    init();
+    return () => unsubscribe();
   }, []);
 
   async function handleLogin() {
     try {
-      if (isMobile) {
+      if (isMobileBrowser) {
+        // Browser mobile → redirect (sem problemas de popup)
         await signInWithRedirect(auth, googleProvider);
       } else {
+        // Desktop ou iOS PWA → popup
         await signInWithPopup(auth, googleProvider);
       }
     } catch (e) {
@@ -44,11 +51,7 @@ export default function AuthGate({ children }) {
     }
   }
 
-  async function handleLogout() {
-    await signOut(auth);
-  }
-
-  if (checking || user === undefined) {
+  if (checking) {
     return <div className="auth-loading">A carregar...</div>;
   }
 
