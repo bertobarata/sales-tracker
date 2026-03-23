@@ -1,9 +1,10 @@
 import { useMemo, useEffect, useState } from 'react';
-import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries } from '../utils/storage';
+import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal } from '../utils/storage';
 import { subscribeDailyEntries } from '../utils/sync';
 
 const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
 const GOALS = { primeirasReunioesRealizadas: 10, segundasReunioesRealizadas: 8 };
+const MONTHLY_VALOR_GOAL = 5000;
 
 function getWeekDays(start) {
   return Array.from({ length: 5 }, (_, i) => {
@@ -45,6 +46,10 @@ export default function Dashboard({ uid }) {
   const entries = getEntriesForWeek(start, end);
   const totals = sumWeekEntries(entries);
 
+  const now = new Date();
+  const monthlyValor = getMonthlyValorTotal(now.getFullYear(), now.getMonth() + 1);
+  const monthlyValorLeft = Math.max(0, MONTHLY_VALOR_GOAL - monthlyValor);
+
   const entryByDate = useMemo(() => {
     const map = {};
     entries.forEach(e => { map[e.date] = e; });
@@ -85,6 +90,22 @@ export default function Dashboard({ uid }) {
           value={totals.segundasReunioesRealizadas}
           goal={GOALS.segundasReunioesRealizadas}
         />
+      </div>
+
+      {/* Objetivo mensal */}
+      <p className="section-label">Objetivo Mensal</p>
+      <div className="card">
+        <GoalBar
+          label="Valor fechos"
+          value={Math.ceil(monthlyValor)}
+          goal={MONTHLY_VALOR_GOAL}
+          unit="€"
+        />
+        {monthlyValorLeft > 0 ? (
+          <p className="goal-remaining">Faltam <strong>{Math.ceil(monthlyValorLeft).toLocaleString('pt-PT')}€</strong> para o objetivo</p>
+        ) : (
+          <p className="goal-remaining goal-reached">Objetivo mensal atingido!</p>
+        )}
       </div>
 
       {/* Reuniões */}

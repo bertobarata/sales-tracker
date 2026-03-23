@@ -9,6 +9,7 @@
   --border: #e2e8f0;
   --text: #0f172a;
   --text-muted: #64748b;
+  --success: #16a34a;
   --radius: 14px;
   --shadow: 0 2px 10px rgba(0,0,0,0.07);
   --safe-x: 16px;
@@ -23,6 +24,7 @@
     --surface: #1e293b;
     --border: #334155;
     --text: #f1f5f9;
+    --success: #4ade80;
     --text-muted: #94a3b8;
     --shadow: 0 2px 12px rgba(0,0,0,0.3);
   }
@@ -341,6 +343,8 @@ body {
 .goal-count.goal-done { color: var(--success); }
 .goal-bar { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
 .goal-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
+.goal-remaining { font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; }
+.goal-remaining.goal-reached { color: var(--success); font-weight: 600; }
 
 /* ─── Field tap (mobile report) ─── */
 .field-tap {

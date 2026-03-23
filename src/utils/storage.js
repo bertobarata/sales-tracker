@@ -41,6 +41,14 @@ export function loadRemoteWeeklySummaries(summaries) {
   localStorage.setItem(WEEKLY_KEY, JSON.stringify(summaries));
 }
 
+export function getMonthlyValorTotal(year, month) {
+  // month is 1-based (1=Jan)
+  const prefix = `${year}-${String(month).padStart(2, '0')}`;
+  return getWeeklySummaries()
+    .filter(s => s.weekStart && s.weekStart.startsWith(prefix))
+    .reduce((acc, s) => acc + (Number(s.extra?.valorTotalFechos) || 0), 0);
+}
+
 export function getWeekDates(date = new Date()) {
   const d = new Date(date);
   const day = d.getDay();
