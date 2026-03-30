@@ -1,4 +1,4 @@
-import { useState } from 'react';
+ import { useState } from 'react';
 import { getWeekDates, getEntriesForWeek, sumWeekEntries, saveWeeklySummary, getWeeklySummaries } from '../utils/storage';
 import { generateWhatsAppText, exportToExcel } from '../utils/report';
 import NumPad from './NumPad';
