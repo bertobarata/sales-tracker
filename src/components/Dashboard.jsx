@@ -1,10 +1,9 @@
 import { useMemo, useEffect, useState } from 'react';
 import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal } from '../utils/storage';
 import { subscribeDailyEntries } from '../utils/sync';
+import { getSettings } from '../utils/settings';
 
 const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
-const GOALS = { primeirasReunioesRealizadas: 10, segundasReunioesRealizadas: 8 };
-const MONTHLY_VALOR_GOAL = 5000;
 
 function getWeekDays(start) {
   return Array.from({ length: 5 }, (_, i) => {
@@ -32,8 +31,7 @@ function GoalBar({ label, value, goal }) {
 
 export default function Dashboard({ uid }) {
   const [tick, setTick] = useState(0);
-  const { start, end } = getWeekDates();
-  const weekDays = getWeekDays(start);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = last week, etc.
 
   useEffect(() => {
     const unsub = subscribeDailyEntries(uid, (remote) => {
@@ -42,6 +40,18 @@ export default function Dashboard({ uid }) {
     });
     return unsub;
   }, [uid]);
+
+  const settings = getSettings();
+  const GOALS = {
+    primeirasReunioesRealizadas: settings.goalPrimeirasReunioesRealizadas,
+    segundasReunioesRealizadas: settings.goalSegundasReunioesRealizadas,
+  };
+  const MONTHLY_VALOR_GOAL = settings.goalMensalValor;
+
+  const offsetDate = new Date();
+  offsetDate.setDate(offsetDate.getDate() - weekOffset * 7);
+  const { start, end } = getWeekDates(offsetDate);
+  const weekDays = getWeekDays(start);
 
   const entries = getEntriesForWeek(start, end);
   const totals = sumWeekEntries(entries);
@@ -54,18 +64,35 @@ export default function Dashboard({ uid }) {
     const map = {};
     entries.forEach(e => { map[e.date] = e; });
     return map;
-  }, [tick]);
+  }, [tick, start]);
 
   const fmt = (d) => d.split('-').reverse().slice(0, 2).join('/');
   const today = new Date().toISOString().split('T')[0];
+  const isCurrentWeek = weekOffset === 0;
 
   return (
     <div>
       {/* Semana + dias */}
       <div className="card">
         <div className="dashboard-week">
-          <h2>Esta Semana</h2>
-          <span className="week-range">{fmt(start)} — {fmt(end)}</span>
+          <div className="week-nav">
+            <button className="week-nav-btn" onClick={() => setWeekOffset(o => o + 1)}>‹</button>
+            <div className="week-nav-label">
+              {isCurrentWeek ? <h2>Esta Semana</h2> : <h2>{fmt(start)} — {fmt(end)}</h2>}
+              {isCurrentWeek && <span className="week-range">{fmt(start)} — {fmt(end)}</span>}
+            </div>
+            <button
+              className="week-nav-btn"
+              onClick={() => setWeekOffset(o => o - 1)}
+              disabled={isCurrentWeek}
+              style={{ opacity: isCurrentWeek ? 0.2 : 1 }}
+            >›</button>
+          </div>
+          {!isCurrentWeek && (
+            <button className="btn-week-current" onClick={() => setWeekOffset(0)}>
+              Esta semana →
+            </button>
+          )}
         </div>
         <div className="day-strip">
           {weekDays.map((d, i) => (
@@ -99,7 +126,6 @@ export default function Dashboard({ uid }) {
           label="Valor fechos"
           value={Math.ceil(monthlyValor)}
           goal={MONTHLY_VALOR_GOAL}
-          unit="€"
         />
         {monthlyValorLeft > 0 ? (
           <p className="goal-remaining">Faltam <strong>{Math.ceil(monthlyValorLeft).toLocaleString('pt-PT')}€</strong> para o objetivo</p>

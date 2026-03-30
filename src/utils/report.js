@@ -34,7 +34,9 @@ export function exportToExcel(weeklySummaries) {
     'Contratos Fechados': s.extra?.contratosFechados || 0,
     'Valor Fechos (€)': s.extra?.valorTotalFechos || 0,
     'Pessoas Seguras': s.extra?.pessoasSeguras || 0,
-    'Reuniões Próx. Semana': s.extra?.reunioesSemanaSeginte || 0,
+    '1ª Próxima Semana': s.extra?.reunioes1aProxSemana || 0,
+    '2ª Próxima Semana': s.extra?.reunioes2aProxSemana || 0,
+    '3ª Próxima Semana': s.extra?.reunioes3aProxSemana || 0,
   }));
 
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -45,7 +47,7 @@ export function exportToExcel(weeklySummaries) {
   ws['!cols'] = [
     { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 13 }, { wch: 13 },
     { wch: 13 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 },
-    { wch: 13 }, { wch: 18 }, { wch: 17 }, { wch: 22 },
+    { wch: 13 }, { wch: 18 }, { wch: 17 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 },
   ];
 
   XLSX.writeFile(wb, 'historico_vendas.xlsx');
