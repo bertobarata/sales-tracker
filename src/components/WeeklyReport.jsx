@@ -68,7 +68,7 @@ export default function WeeklyReport({ uid }) {
 
   function handleSave() {
     const summary = { weekStart: start, weekEnd: end, totals, extra: getExtraNumbers() };
-    saveWeeklySummary(summary);
+    saveWeeklySummary(summary, uid);
     setSaved(true); setTimeout(() => setSaved(false), 3000);
   }
 

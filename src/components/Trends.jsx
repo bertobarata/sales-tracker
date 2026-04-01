@@ -8,9 +8,9 @@ import {
   loadRemoteWeeklySummaries, loadRemoteEntries,
 } from '../utils/storage';
 import { subscribeDailyEntries, subscribeWeeklySummaries } from '../utils/sync';
+import { getSettings } from '../utils/settings';
 
 const WEEKS_TO_SHOW = 8;
-const MONTHLY_VALOR_GOAL = 5000;
 
 // Build last N weeks of aggregated data
 function buildWeeklyData(n) {
@@ -60,6 +60,7 @@ const tooltipStyle = {
 
 export default function Trends({ uid }) {
   const [tick, setTick] = useState(0);
+  const { goalMensalValor: MONTHLY_VALOR_GOAL } = getSettings();
 
   useEffect(() => {
     const unsubDaily = subscribeDailyEntries(uid, (remote) => {
@@ -74,7 +75,9 @@ export default function Trends({ uid }) {
   }, [uid]);
 
   const data = buildWeeklyData(WEEKS_TO_SHOW);
-  const hasData = data.some(w => w.contactos > 0 || w.primeiras > 0 || w.valorFechos > 0);
+  const hasData = data.some(w =>
+    w.contactos > 0 || w.primeiras > 0 || w.segundas > 0 || w.terceiras > 0 || w.valorFechos > 0
+  );
 
   if (!hasData) {
     return (
