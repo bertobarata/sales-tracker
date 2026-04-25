@@ -15,6 +15,7 @@ Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
 ## O que faz
 
 **Registo diário** — introduz os teus dados do dia de forma guiada, campo a campo:
+
 - Contactos efetuados
 - 1as, 2as e 3as reuniões marcadas
 - 1as, 2as e 3as reuniões realizadas
@@ -22,6 +23,7 @@ Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
 - Referências obtidas
 
 **Dashboard semanal** — visão geral da semana com:
+
 - Progresso em relação aos objetivos (10 primeiras reuniões / 8 segundas)
 - Totais por categoria
 - Dias com registo assinalados
@@ -34,14 +36,14 @@ Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
 
 ## Tecnologias
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Frontend | React + Vite |
-| Estilo | CSS puro (responsivo, dark mode automático) |
-| Autenticação | Firebase Auth (Google) |
-| Base de dados | Firebase Firestore (sync em tempo real) |
-| Hosting | Vercel |
-| Excel | SheetJS (xlsx) |
+| Camada        | Tecnologia                                  |
+| ------------- | ------------------------------------------- |
+| Frontend      | React + Vite                                |
+| Estilo        | CSS puro (responsivo, dark mode automático) |
+| Autenticação  | Firebase Auth (Google)                      |
+| Base de dados | Firebase Firestore (sync em tempo real)     |
+| Hosting       | Vercel                                      |
+| Excel         | SheetJS (xlsx)                              |
 
 ---
 
@@ -58,6 +60,7 @@ Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
 ## Configuração local
 
 ### Pré-requisitos
+
 - Node.js 18+
 - Conta Firebase com projeto configurado
 
@@ -72,21 +75,28 @@ npm install
 ### Firebase
 
 Cria um projeto em [console.firebase.google.com](https://console.firebase.google.com) com:
-- **Authentication** → Google ativado
-- **Firestore Database** → criado
 
-Edita `src/firebase.js` com as tuas credenciais:
+- **Authentication** → Google ativado como método de login
+- **Firestore Database** → criado (ver regras abaixo)
 
-```js
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
-};
+Copia o template de variáveis de ambiente e preenche com as credenciais do projeto (obtidas em **Project settings → General → Your apps**):
+
+```bash
+cp .env.example .env.local
 ```
+
+Edita `.env.local`:
+
+```
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=sales-tracker-xxxxx.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=sales-tracker-xxxxx
+VITE_FIREBASE_STORAGE_BUCKET=sales-tracker-xxxxx.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+> **Nota:** o `.env.local` está no `.gitignore` e nunca vai para o repositório. A `apiKey` Firebase Web é pública por design — a segurança é garantida pelas Firestore Security Rules (ver abaixo) e por restrições de domínio configuradas no [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
 
 ### Regras do Firestore
 
@@ -148,4 +158,8 @@ const GOALS = {
 };
 ```
 
-Altera estes valores para ajustar os teus objetivos.
+## Altera estes valores para ajustar os teus objetivos.
+
+## Licença
+
+[MIT](LICENSE) — Berto Afonso Barata, 2026
