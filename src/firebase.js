@@ -2,13 +2,32 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
+// Fail-fast: detetar variáveis em falta logo no arranque
+const requiredEnvVars = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID',
+];
+
+const missing = requiredEnvVars.filter((name) => !import.meta.env[name]);
+if (missing.length > 0) {
+  throw new Error(
+    `Firebase config incompleta. Variáveis em falta: ${missing.join(', ')}.\n` +
+    `Copia .env.example para .env.local e preenche com as tuas credenciais ` +
+    `(console.firebase.google.com → Project settings → Your apps).`
+  );
+}
+
 const firebaseConfig = {
-  apiKey: "AIzaSyBZP5zHghVJ3q_z4X0QCFMyIUrnQF7uKzs",
-  authDomain: "sales-tracker-403a6.firebaseapp.com",
-  projectId: "sales-tracker-403a6",
-  storageBucket: "sales-tracker-403a6.firebasestorage.app",
-  messagingSenderId: "271308469604",
-  appId: "1:271308469604:web:5799344e678b952d84b671"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
