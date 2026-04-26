@@ -44,12 +44,6 @@ Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
 
 ---
 
-## TODO
-
-- [ ] Integração com Notion — sincronizar registos diários e relatórios semanais com uma base de dados Notion
-
----
-
 ## O que faz
 
 **Registo diário** — introduz os teus dados do dia de forma guiada, campo a campo:
