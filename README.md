@@ -8,7 +8,7 @@ Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
 
 ## 📸 Screenshots
 
-<table>
+<table align="center">
   <tr>
     <td align="center" width="50%">
       <strong>Hoje — input dia-cêntrico</strong><br>
