@@ -361,6 +361,20 @@ body {
   padding: 2px 0;
 }
 .week-range { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
+.btn-hoje {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: var(--primary);
+  border: 1.5px solid var(--primary);
+  border-radius: 8px;
+  padding: 7px 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 6px;
+}
 .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .metric-card { background: var(--bg); border-radius: 10px; padding: 14px; }
 .metric-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
@@ -379,6 +393,38 @@ body {
 }
 .day-dot.filled { background: var(--primary); color: white; }
 .day-dot .day-num { display: block; font-size: 0.78rem; font-weight: 700; margin-top: 2px; }
+.day-dot.day-today { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+/* ─── DailyInput day selector ─── */
+.day-selector { display: flex; gap: 4px; margin: 8px 0 12px; }
+.day-sel-btn {
+  flex: 1;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 2px;
+  text-align: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.day-sel-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+.day-sel-btn.today { outline: 2px solid var(--primary); outline-offset: 1px; }
+.day-sel-btn.active.today { outline-color: white; }
+.day-sel-btn.future { opacity: 0.3; cursor: default; }
+.day-sel-num { font-size: 0.78rem; font-weight: 800; }
 
 /* ─── Report ─── */
 .report-totals { margin-bottom: 4px; }

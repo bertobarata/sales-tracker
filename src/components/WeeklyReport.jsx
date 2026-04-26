@@ -1,5 +1,5 @@
- import { useState } from 'react';
-import { getWeekDates, getEntriesForWeek, sumWeekEntries, saveWeeklySummary, getWeeklySummaries } from '../utils/storage';
+import { useState } from 'react';
+import { getWeekDates, getEntriesForWeek, sumWeekEntries, saveWeeklySummary, getWeeklySummaries, formatWeekLabel } from '../utils/storage';
 import { generateWhatsAppText, exportToExcel } from '../utils/report';
 import NumPad from './NumPad';
 
@@ -20,7 +20,12 @@ const INITIAL_EXTRA = {
 };
 
 export default function WeeklyReport({ uid }) {
-  const { start, end } = getWeekDates();
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = semana atual, 1 = semana anterior, etc.
+
+  const offsetDate = new Date();
+  offsetDate.setDate(offsetDate.getDate() - weekOffset * 7);
+  const { start, end } = getWeekDates(offsetDate);
+
   const entries = getEntriesForWeek(start, end);
   const totals = sumWeekEntries(entries);
 
@@ -30,6 +35,7 @@ export default function WeeklyReport({ uid }) {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const isCurrentWeek = weekOffset === 0;
   const fmt = (d) => d.split('-').reverse().join('/');
 
   function setField(key, val) {
@@ -96,8 +102,24 @@ export default function WeeklyReport({ uid }) {
 
   return (
     <div className="card">
-      <h2>Relatório Semanal</h2>
-      <p className="subtitle">{fmt(start)} — {fmt(end)}</p>
+      <div className="week-nav" style={{ marginBottom: 4 }}>
+        <button className="week-nav-btn" onClick={() => setWeekOffset(o => o + 1)}>‹</button>
+        <div className="week-nav-label">
+          <h2>Relatório Semanal</h2>
+          <span className="week-range">{formatWeekLabel(start, end)}</span>
+        </div>
+        <button
+          className="week-nav-btn"
+          onClick={() => setWeekOffset(o => o - 1)}
+          disabled={isCurrentWeek}
+          style={{ opacity: isCurrentWeek ? 0.2 : 1 }}
+        >›</button>
+      </div>
+      {!isCurrentWeek && (
+        <button className="btn-week-current" onClick={() => setWeekOffset(0)}>
+          Esta semana →
+        </button>
+      )}
 
       <div className="report-totals">
         <h3>Totais da semana</h3>

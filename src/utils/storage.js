@@ -49,17 +49,44 @@ export function getMonthlyValorTotal(year, month) {
     .reduce((acc, s) => acc + (Number(s.extra?.valorTotalFechos) || 0), 0);
 }
 
+// ISO 8601: semana começa na segunda, âncora na quinta-feira da semana
+export function getISOWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7; // domingo (0) passa a 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum); // avança para a quinta da mesma semana
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+const PT_MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+// Retorna "Semana 17 · 20–26 abr"
+export function formatWeekLabel(weekStart, weekEnd) {
+  const s = new Date(weekStart + 'T00:00:00');
+  const e = new Date(weekEnd + 'T00:00:00');
+  const weekNum = getISOWeekNumber(s);
+  return `Semana ${weekNum} · ${s.getDate()}–${e.getDate()} ${PT_MONTHS[e.getMonth()]}`;
+}
+
+// Formata Date como "YYYY-MM-DD" usando hora local (evita desfasamento UTC)
+function localDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export function getWeekDates(date = new Date()) {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d.setDate(diff));
-  monday.setHours(0, 0, 0, 0);
-  const friday = new Date(monday);
-  friday.setDate(monday.getDate() + 4);
+  d.setDate(d.getDate() - day + (day === 0 ? -6 : 1)); // recua para segunda
+  d.setHours(0, 0, 0, 0);
+  const monday = new Date(d);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6); // seg + 6 = dom (ISO 8601)
   return {
-    start: monday.toISOString().split('T')[0],
-    end: friday.toISOString().split('T')[0],
+    start: localDateStr(monday),
+    end: localDateStr(sunday),
   };
 }
 

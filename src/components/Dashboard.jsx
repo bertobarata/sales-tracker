@@ -1,15 +1,18 @@
 import { useMemo, useEffect, useState } from 'react';
-import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal } from '../utils/storage';
+import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal, formatWeekLabel } from '../utils/storage';
 import { subscribeDailyEntries } from '../utils/sync';
 import { getSettings } from '../utils/settings';
 
-const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'];
+const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
 function getWeekDays(start) {
-  return Array.from({ length: 5 }, (_, i) => {
+  return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start + 'T00:00:00');
     d.setDate(d.getDate() + i);
-    return d.toISOString().split('T')[0];
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   });
 }
 
@@ -79,7 +82,7 @@ export default function Dashboard({ uid }) {
             <button className="week-nav-btn" onClick={() => setWeekOffset(o => o + 1)}>‹</button>
             <div className="week-nav-label">
               {isCurrentWeek ? <h2>Esta Semana</h2> : <h2>{fmt(start)} — {fmt(end)}</h2>}
-              {isCurrentWeek && <span className="week-range">{fmt(start)} — {fmt(end)}</span>}
+              <span className="week-range">{formatWeekLabel(start, end)}</span>
             </div>
             <button
               className="week-nav-btn"
