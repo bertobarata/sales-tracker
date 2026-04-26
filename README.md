@@ -6,6 +6,44 @@ Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
 
 ---
 
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>Hoje — input dia-cêntrico</strong><br>
+      <img src="docs/screenshots/01-hoje-mobile-dark.png" alt="Tab Hoje em mobile dark mode com day selector e formulário preenchido" width="280"><br>
+      <sub>iPhone 14 Pro · dark</sub>
+    </td>
+    <td align="center" width="50%">
+      <strong>Semana — ISO 8601</strong><br>
+      <img src="docs/screenshots/02-semana-mobile-dark.png" alt="Tab Semana com label ISO 8601 e strip de 7 dias" width="280"><br>
+      <sub>iPhone 14 Pro · dark</sub>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <strong>Tendências — histórico semanal (Recharts)</strong><br>
+  <img src="docs/screenshots/03-tendencias-desktop-dark.png" alt="Tab Tendências com gráficos populados de 2 semanas de dados" width="820"><br>
+  <sub>Desktop · dark</sub>
+</p>
+
+<p align="center">
+  <strong>Relatório — totais agregados + preview WhatsApp</strong><br>
+  <img src="docs/screenshots/04-relatorio-desktop-light.png" alt="Tab Relatório com totais semanais e preview de texto formatado" width="820"><br>
+  <sub>Desktop · light</sub>
+</p>
+
+<details>
+<summary>Light mode em mobile</summary>
+<p align="center">
+  <img src="docs/screenshots/05-input-mobile-light.png" alt="Tab Hoje em mobile light mode" width="280">
+</p>
+</details>
+
+---
+
 ## TODO
 
 - [ ] Integração com Notion — sincronizar registos diários e relatórios semanais com uma base de dados Notion
