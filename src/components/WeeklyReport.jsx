@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getWeekDates, getEntriesForWeek, sumWeekEntries, saveWeeklySummary, getWeeklySummaries, formatWeekLabel } from '../utils/storage';
 import { generateWhatsAppText, exportToExcel } from '../utils/report';
 import NumPad from './NumPad';
@@ -30,6 +30,27 @@ export default function WeeklyReport({ uid }) {
   const totals = sumWeekEntries(entries);
 
   const [extra, setExtra] = useState(INITIAL_EXTRA);
+
+  // Recarrega o extra guardado sempre que a semana muda (Fix Bug 2)
+  useEffect(() => {
+    const saved = getWeeklySummaries().find(s => s.weekStart === start);
+    if (saved?.extra) {
+      const toStr = n => (n === 0 || n == null) ? '' : String(n);
+      setExtra({
+        contratosFechados:      toStr(saved.extra.contratosFechados),
+        valorTotalFechos:       toStr(saved.extra.valorTotalFechos),
+        pessoasSeguras:         toStr(saved.extra.pessoasSeguras),
+        reunioes1aProxSemana:   toStr(saved.extra.reunioes1aProxSemana),
+        reunioes2aProxSemana:   toStr(saved.extra.reunioes2aProxSemana),
+        reunioes3aProxSemana:   toStr(saved.extra.reunioes3aProxSemana),
+      });
+    } else {
+      setExtra(INITIAL_EXTRA);
+    }
+    setSaved(false);
+    setCopied(false);
+  }, [start]);
+
   const [activeField, setActiveField] = useState(null); // mobile numpad field
   const [numpadVal, setNumpadVal] = useState('');
   const [copied, setCopied] = useState(false);
@@ -74,7 +95,7 @@ export default function WeeklyReport({ uid }) {
 
   function handleSave() {
     const summary = { weekStart: start, weekEnd: end, totals, extra: getExtraNumbers() };
-    saveWeeklySummary(summary);
+    saveWeeklySummary(summary, uid);
     setSaved(true); setTimeout(() => setSaved(false), 3000);
   }
 
