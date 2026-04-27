@@ -1,21 +1,25 @@
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
+import { onAuthStateChanged, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
 export default function AuthGate({ children }) {
   const [user, setUser] = useState(undefined);
+  const [loginError, setLoginError] = useState(null);
 
   useEffect(() => {
+    // Captura erros que possam ter ocorrido durante o redirect de volta
+    getRedirectResult(auth).catch((e) => {
+      console.error(e);
+      setLoginError('Não foi possível iniciar sessão. Tenta novamente.');
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u ?? null));
     return unsubscribe;
   }, []);
 
-  async function handleLogin() {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (e) {
-      console.error(e);
-    }
+  function handleLogin() {
+    setLoginError(null);
+    signInWithRedirect(auth, googleProvider);
   }
 
   if (user === undefined) {
@@ -37,6 +41,7 @@ export default function AuthGate({ children }) {
             </svg>
             Entrar com Google
           </button>
+          {loginError && <p className="auth-error">{loginError}</p>}
         </div>
       </div>
     );
