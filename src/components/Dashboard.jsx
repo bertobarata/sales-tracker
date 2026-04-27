@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal, formatWeekLabel } from '../utils/storage';
 import { subscribeDailyEntries } from '../utils/sync';
 import { getSettings } from '../utils/settings';
@@ -33,7 +33,7 @@ function GoalBar({ label, value, goal }) {
 }
 
 export default function Dashboard({ uid }) {
-  const [tick, setTick] = useState(0);
+  const [_tick, setTick] = useState(0);
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = last week, etc.
 
   useEffect(() => {
@@ -63,11 +63,8 @@ export default function Dashboard({ uid }) {
   const monthlyValor = getMonthlyValorTotal(now.getFullYear(), now.getMonth() + 1);
   const monthlyValorLeft = Math.max(0, MONTHLY_VALOR_GOAL - monthlyValor);
 
-  const entryByDate = useMemo(() => {
-    const map = {};
-    entries.forEach(e => { map[e.date] = e; });
-    return map;
-  }, [tick, start]);
+  const entryByDate = {};
+  entries.forEach(e => { entryByDate[e.date] = e; });
 
   const fmt = (d) => d.split('-').reverse().slice(0, 2).join('/');
   const today = new Date().toISOString().split('T')[0];

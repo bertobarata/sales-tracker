@@ -59,7 +59,7 @@ const tooltipStyle = {
 };
 
 export default function Trends({ uid }) {
-  const [tick, setTick] = useState(0);
+  const [_tick, setTick] = useState(0);
 
   useEffect(() => {
     const unsubDaily = subscribeDailyEntries(uid, (remote) => {

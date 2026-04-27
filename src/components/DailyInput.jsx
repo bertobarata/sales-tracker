@@ -53,6 +53,7 @@ export default function DailyInput({ uid }) {
   const today = localDateStr(new Date());
 
   const [weekOffset, setWeekOffset] = useState(0); // 0 = semana atual
+  const [prevWeekOffset, setPrevWeekOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState(today);
   const [values, setValues] = useState(EMPTY);
   const [done, setDone] = useState(false);
@@ -67,13 +68,14 @@ export default function DailyInput({ uid }) {
   const weekDays = getWeekDayStrings(weekStart);
   const isCurrentWeek = weekOffset === 0;
 
-  // Quando a semana muda, reposiciona selectedDate:
-  // se a semana atual, volta a hoje; caso contrário, vai para a segunda
-  useEffect(() => {
+  // Quando a semana muda, reposiciona selectedDate durante o render
+  // (padrão React para reset de state derivado — evita useEffect em cascata)
+  if (prevWeekOffset !== weekOffset) {
+    setPrevWeekOffset(weekOffset);
     setSelectedDate(isCurrentWeek ? today : weekStart);
     setDone(false);
     setAlreadySaved(false);
-  }, [weekOffset]);
+  }
 
   // Quando selectedDate muda, carrega os dados desse dia (se existirem)
   useEffect(() => {
