@@ -1,5 +1,7 @@
 # Sales Tracker
 
+![CI](https://github.com/bertobarata/sales-tracker/actions/workflows/ci.yml/badge.svg)
+
 Aplicação web pessoal para registo diário de atividade comercial e geração de relatórios semanais.
 
 Acesso: **[sales-tracker-red.vercel.app](https://sales-tracker-red.vercel.app)**
