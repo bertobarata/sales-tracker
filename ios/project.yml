@@ -1,0 +1,94 @@
+name: SalesTracker
+options:
+  bundleIdPrefix: com.bertobarata
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+targets:
+  SalesTracker:
+    type: application
+    platform: iOS
+    sources:
+      - path: SalesTracker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bertobarata.salestracker
+        INFOPLIST_KEY_CFBundleDisplayName: Sales Tracker
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_CFBundleLocalizations: pt
+        INFOPLIST_KEY_CFBundleDevelopmentRegion: pt-PT
+        CODE_SIGN_ENTITLEMENTS: SalesTracker/Resources/SalesTracker.entitlements
+    dependencies:
+      - target: SalesTrackerWidgetExtension
+    info:
+      path: SalesTracker/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Sales Tracker
+        UILaunchScreen: {}
+
+  SalesTrackerWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SalesTrackerWidget
+      - path: SalesTracker/Models
+      - path: SalesTracker/Core
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bertobarata.salestracker.widget
+        CODE_SIGN_ENTITLEMENTS: SalesTrackerWidget/SalesTrackerWidget.entitlements
+    info:
+      path: SalesTrackerWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Sales Tracker
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+
+  SalesTrackerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: SalesTrackerTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: SalesTracker
+
+  SalesTrackerUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: SalesTrackerUITests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: SalesTracker
+    dependencies:
+      - target: SalesTracker
+
+schemes:
+  SalesTracker:
+    build:
+      targets:
+        SalesTracker: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - SalesTrackerTests
+        - SalesTrackerUITests

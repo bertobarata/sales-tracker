@@ -24,3 +24,15 @@ coverage
 *.sln
 *.sw?
 .vercel
+
+# iOS / Xcode
+# O .xcodeproj é gerado pelo XcodeGen a partir de ios/project.yml — não se versiona.
+ios/*.xcodeproj
+ios/*.xcworkspace
+ios/build/
+ios/DerivedData/
+xcuserdata/
+*.xcuserstate
+# Os Info.plist são gerados pelo XcodeGen a partir dos blocos `info:` do project.yml
+ios/SalesTracker/Resources/Info.plist
+ios/SalesTrackerWidget/Info.plist
