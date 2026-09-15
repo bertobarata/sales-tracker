@@ -14,7 +14,7 @@ apareçam no mesmo diff.
 | Bundle ID | `com.bertobarata.salestracker` |
 | Widget | `com.bertobarata.salestracker.widget` |
 | App Group | `group.com.bertobarata.salestracker` |
-| Assinatura | ❌ `DEVELOPMENT_TEAM` por preencher |
+| Assinatura | ⚠️ `DEVELOPMENT_TEAM` = `7ACX25JD5D`; falta registar os identificadores no portal |
 | Nome na loja | MetTracker (ver aviso em `AppStore/METADATA.md`) |
 | Ícone | ✅ `Assets.xcassets`, 1024×1024 sem alfa |
 | Capturas | ✅ quatro, 6.9" (1320×2868), em `AppStore/screenshots/` |
@@ -85,8 +85,8 @@ usa CloudKit, a PWA fica no Firestore. São duas ilhas de dados.
 ## Por fazer antes de submeter
 
 ### Bloqueadores de assinatura
-- [ ] `APPLE_TEAM_ID` → preencher `DEVELOPMENT_TEAM` em `project.yml`
-      (developer.apple.com → Membership). Continua `XXXXXXXXXX` no runbook do TVDE.
+- [x] `APPLE_TEAM_ID` = `7ACX25JD5D` (conta Individual), preenchido em `project.yml`.
+      O runbook do TVDE (`~/Developer/App/mobile/LANCAMENTO.md:105`) ainda tem `XXXXXXXXXX`.
 - [ ] Registar no portal Apple, com estes identificadores exatos:
       - App ID `com.bertobarata.salestracker`, com **iCloud (CloudKit)**,
         **App Groups** e **Push Notifications** ligados. O push é exigido pela
