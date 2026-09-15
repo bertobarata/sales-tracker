@@ -22,6 +22,18 @@ struct SalesTrackerApp: App {
     private static func makeContainer() -> ModelContainer {
         let schema = Schema([DailyEntry.self, WeeklySummary.self])
 
+        #if DEBUG
+        // Capturas de ecrã da App Store: base em memória, semeada, sem tocar
+        // na base real nem no iCloud. Nunca existe numa build de distribuição.
+        if DemoData.isRequested {
+            let demoConfig = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            if let container = try? ModelContainer(for: schema, configurations: demoConfig) {
+                DemoData.seed(into: ModelContext(container))
+                return container
+            }
+        }
+        #endif
+
         // O App Group só existe em builds assinados. Sem ele, `groupContainer:`
         // não falha — rebenta — por isso nem se tenta.
         if AppGroup.isAvailable {
