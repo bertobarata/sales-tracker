@@ -87,7 +87,14 @@ usa CloudKit, a PWA fica no Firestore. São duas ilhas de dados.
 ### Bloqueadores de assinatura
 - [ ] `APPLE_TEAM_ID` → preencher `DEVELOPMENT_TEAM` em `project.yml`
       (developer.apple.com → Membership). Continua `XXXXXXXXXX` no runbook do TVDE.
-- [ ] Registar no portal Apple: App ID, App Group, contentor CloudKit
+- [ ] Registar no portal Apple, com estes identificadores exatos:
+      - App ID `com.bertobarata.salestracker`, com **iCloud (CloudKit)**,
+        **App Groups** e **Push Notifications** ligados. O push é exigido pela
+        sincronização do SwiftData sobre CloudKit, mesmo não havendo notificações
+        remotas próprias — sem ele o `archive` de distribuição falha a assinar
+      - App ID `com.bertobarata.salestracker.widget`, com iCloud e App Groups
+      - App Group `group.com.bertobarata.salestracker`
+      - Contentor CloudKit `iCloud.com.bertobarata.salestracker`
 - [ ] App Store Connect → Agreements, Tax and Banking (é preciso mesmo para app grátis)
 
 ### Bloqueadores de revisão

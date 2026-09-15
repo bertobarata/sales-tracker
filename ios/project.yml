@@ -40,6 +40,10 @@ targets:
       properties:
         CFBundleDisplayName: MetTracker
         UILaunchScreen: {}
+        # O SwiftData sobre CloudKit é avisado das alterações dos outros dispositivos
+        # por push silencioso. Sem este modo, a sincronização só acontece ao abrir a app.
+        UIBackgroundModes:
+          - remote-notification
 
   SalesTrackerWidgetExtension:
     type: app-extension
