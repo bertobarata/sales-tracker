@@ -14,7 +14,7 @@ apareçam no mesmo diff.
 | Bundle ID | `com.bertobarata.salestracker` |
 | Widget | `com.bertobarata.salestracker.widget` |
 | App Group | `group.com.bertobarata.salestracker` |
-| Assinatura | ⚠️ `DEVELOPMENT_TEAM` = `7ACX25JD5D`; falta registar os identificadores no portal |
+| Assinatura | ✅ archive e export de App Store a passar, equipa `7ACX25JD5D` |
 | Nome na loja | MetTracker (ver aviso em `AppStore/METADATA.md`) |
 | Ícone | ✅ `Assets.xcassets`, 1024×1024 sem alfa |
 | Capturas | ✅ quatro, 6.9" (1320×2868), em `AppStore/screenshots/` |
@@ -87,6 +87,10 @@ usa CloudKit, a PWA fica no Firestore. São duas ilhas de dados.
 ### Bloqueadores de assinatura
 - [x] `APPLE_TEAM_ID` = `7ACX25JD5D` (conta Individual), preenchido em `project.yml`.
       O runbook do TVDE (`~/Developer/App/mobile/LANCAMENTO.md:105`) ainda tem `XXXXXXXXXX`.
+- [x] Identificadores no portal — o Xcode criou-os sozinho por assinatura automática
+      (aparecem com o prefixo `XC`): os dois App IDs, o App Group e o contentor CloudKit.
+- [x] Dispositivo registado na equipa (`Berto 17 Pro`). A Apple não emite perfil de
+      desenvolvimento a uma equipa sem dispositivos, e sem esse perfil o archive falha.
 - [ ] Registar no portal Apple, com estes identificadores exatos:
       - App ID `com.bertobarata.salestracker`, com **iCloud (CloudKit)**,
         **App Groups** e **Push Notifications** ligados. O push é exigido pela
@@ -131,3 +135,35 @@ no binário de distribuição.
 
 O teste `ScreenshotTests` percorre os quatro separadores e guarda uma imagem de cada um
 como anexo do `.xcresult`. Os comandos para regenerar estão em `AppStore/METADATA.md`.
+
+
+## Archive e exportação
+
+```bash
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+cd ios
+
+xcodebuild archive -project SalesTracker.xcodeproj -scheme SalesTracker \
+  -destination 'generic/platform=iOS' \
+  -archivePath /tmp/MetTracker.xcarchive -allowProvisioningUpdates
+
+xcodebuild -exportArchive -archivePath /tmp/MetTracker.xcarchive \
+  -exportPath /tmp/MetTracker-export \
+  -exportOptionsPlist AppStore/ExportOptions.plist -allowProvisioningUpdates
+```
+
+Verificado no `.ipa` exportado: `aps-environment` = `production`, ambiente do contentor
+CloudKit = `Production`, `get-task-allow` = falso, `beta-reports-active` presente (TestFlight),
+App Group e contentor iCloud nos entitlements, widget embebido, ícone incluído.
+
+### Esquema do CloudKit em produção
+
+O build de distribuição aponta ao ambiente **Production** do contentor. O SwiftData cria os
+tipos de registo sozinho no ambiente **Development**, mas nunca em Production — esse tem de
+ser promovido à mão no CloudKit Console. Enquanto não o for, a sincronização não funciona
+para quem instalar a app da loja, e falha em silêncio.
+
+1. Correr a app uma vez num dispositivo com build de desenvolvimento, gravando pelo menos
+   um dia, para o esquema aparecer em Development
+2. https://icloud.developer.apple.com → contentor `iCloud.com.bertobarata.salestracker`
+3. Schema → **Deploy Schema to Production**
