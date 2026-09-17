@@ -42,19 +42,9 @@ struct RootView: View {
         .preferredColorScheme(AppAppearance(rawValue: appearance)?.colorScheme)
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
-            Task { await refreshReminders() }
+            Task { await ReminderScheduler.refresh(using: context) }
         }
     }
 
-    private func refreshReminders() async {
-        let store = EntryStore(context)
-        let horizon = WeekMath.week(offsetBy: 0).days + WeekMath.week(offsetBy: 1).days
-        let filled = Set(
-            horizon
-                .compactMap { store.entry(for: $0) }
-                .filter { !$0.isEmpty }
-                .map(\.dayKey)
-        )
-        await ReminderScheduler.reschedule(settings: .current, filledDayKeys: filled)
-    }
+
 }

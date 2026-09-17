@@ -219,15 +219,7 @@ struct SettingsView: View {
     }
 
     private func applyReminderSettings() async {
-        let store = EntryStore(context)
-        let horizon = WeekMath.week(offsetBy: 0).days + WeekMath.week(offsetBy: 1).days
-        let filled = Set(
-            horizon
-                .compactMap { store.entry(for: $0) }
-                .filter { !$0.isEmpty }
-                .map(\.dayKey)
-        )
-        await ReminderScheduler.reschedule(settings: .current, filledDayKeys: filled)
+        await ReminderScheduler.refresh(using: context)
     }
 }
 

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import UserNotifications
 
 /// Lembretes diários. Em vez de uma notificação repetitiva, agenda-se uma por dia
@@ -61,6 +62,23 @@ enum ReminderScheduler {
                 try? await center.add(request)
             }
         }
+    }
+
+    /// Reagenda a partir do estado atual da base de dados.
+    ///
+    /// Estava escrito três vezes — na raiz, nas definições e na introdução — e bastava
+    /// uma delas ficar para trás para os lembretes aparecerem em dias já registados.
+    @MainActor
+    static func refresh(using context: ModelContext) async {
+        let store = EntryStore(context)
+        let horizon = WeekMath.week(offsetBy: 0).days + WeekMath.week(offsetBy: 1).days
+        let filled = Set(
+            horizon
+                .compactMap { store.entry(for: $0) }
+                .filter { !$0.isEmpty }
+                .map(\.dayKey)
+        )
+        await reschedule(settings: .current, filledDayKeys: filled)
     }
 
     static func cancelAll() {

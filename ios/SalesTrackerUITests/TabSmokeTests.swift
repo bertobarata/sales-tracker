@@ -120,6 +120,31 @@ final class TabSmokeTests: XCTestCase {
         XCTAssertTrue(shown.contains("750"), "Sair em branco apagou o valor: \(shown)")
     }
 
+    /// A introdução tem de pedir os lembretes e explicar antes de pedir. O toque no
+    /// botão não é simulado de propósito: abriria o alerta de autorização do sistema,
+    /// que é do SpringBoard e torna o teste frágil.
+    func testOnboardingOffersToEnableReminders() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--reset-onboarding", "--empty-store"]
+        app.launch()
+
+        XCTAssertTrue(
+            app.buttons["Saltar introdução"].waitForExistence(timeout: 15),
+            "A introdução não apareceu"
+        )
+
+        let enable = app.buttons["Ativar lembretes"]
+        for _ in 0..<6 where !enable.exists {
+            app.swipeLeft()
+        }
+
+        XCTAssertTrue(enable.exists, "A introdução não oferece ativar os lembretes")
+        XCTAssertTrue(
+            app.staticTexts["Dois lembretes por dia"].exists,
+            "O pedido aparece sem explicar para que serve"
+        )
+    }
+
     func testOnboardingAppearsOnFirstLaunchAndCanBeDismissed() {
         let app = XCUIApplication()
         app.launchArguments = ["--reset-onboarding", "--empty-store"]

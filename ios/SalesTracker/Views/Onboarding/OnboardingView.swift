@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Introdução mostrada no primeiro arranque e reabrível em Definições.
 ///
@@ -7,6 +8,10 @@ import SwiftUI
 /// contar só os fechos chega tarde de mais para se corrigir alguma coisa.
 struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    @AppStorage(SettingsKey.remindersEnabled, store: .shared)
+    private var remindersEnabled = false
+    @State private var permissionOutcome: PermissionOutcome = .notAsked
     @AppStorage(SettingsKey.onboardingCompletedVersion, store: .shared)
     private var completedVersion = 0
 
@@ -50,6 +55,16 @@ struct OnboardingView: View {
             """
         ),
         Page(
+            symbol: "bell.badge",
+            title: "Dois lembretes por dia",
+            body: """
+            Um de manhã, para ires registando à medida que acontece, e outro ao fim da \
+            tarde para fechares o dia. Só aparecem nos dias que ainda não registaste, e \
+            mudam-se ou desligam-se a qualquer momento nas definições.
+            """,
+            showsReminderButton: true
+        ),
+        Page(
             symbol: "lock.iphone",
             title: "Os dados não saem daqui",
             body: """
@@ -64,7 +79,12 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             TabView(selection: $page) {
                 ForEach(Array(pages.enumerated()), id: \.offset) { index, item in
-                    PageView(page: item).tag(index)
+                    PageView(page: item) {
+                        if item.showsReminderButton {
+                            reminderPermission
+                        }
+                    }
+                    .tag(index)
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .always))
@@ -107,10 +127,53 @@ struct OnboardingView: View {
         let title: String
         let body: String
         var showsFunnel = false
+        var showsReminderButton = false
     }
 
-    private struct PageView: View {
+    enum PermissionOutcome {
+        case notAsked, granted, denied
+    }
+
+    /// Pede a autorização só depois de explicar para que serve.
+    ///
+    /// Aceitar liga os lembretes de imediato: quem carregou no botão já disse que os
+    /// quer, e obrigar a ir depois às definições ligar um interruptor seria pedir a
+    /// mesma coisa duas vezes.
+    @ViewBuilder
+    private var reminderPermission: some View {
+        switch permissionOutcome {
+        case .notAsked:
+            Button("Ativar lembretes") {
+                Task { await requestReminders() }
+            }
+            .font(.headline)
+            .buttonStyle(.glass)
+
+        case .granted:
+            Label("Lembretes ativados às 9:00 e às 17:00", systemImage: "checkmark.circle.fill")
+                .font(.subheadline)
+                .foregroundStyle(.green)
+                .multilineTextAlignment(.center)
+
+        case .denied:
+            Text("Sem problema. Podes ativá-los mais tarde em Definições.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    private func requestReminders() async {
+        let granted = await ReminderScheduler.requestAuthorization()
+        permissionOutcome = granted ? .granted : .denied
+        guard granted else { return }
+        remindersEnabled = true
+        await ReminderScheduler.refresh(using: context)
+    }
+
+    private struct PageView<Extra: View>: View {
         let page: Page
+        @ViewBuilder var extra: Extra
 
         var body: some View {
             ScrollView {
@@ -133,6 +196,8 @@ struct OnboardingView: View {
                     if page.showsFunnel {
                         FunnelDiagram().padding(.top, 8)
                     }
+
+                    extra
                 }
                 .padding(.horizontal, 28)
                 .padding(.bottom, 32)
