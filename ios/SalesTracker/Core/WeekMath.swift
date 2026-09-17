@@ -97,6 +97,78 @@ enum WeekMath {
         return MonthSpan(start: start, end: end)
     }
 
+    // MARK: - Mês comercial
+
+    /// O dia de fecho não cai sempre no último dia do mês, e em meses curtos um dia 31
+    /// não existe. Encurta-se sempre ao último dia disponível, que é o que qualquer
+    /// pessoa entende por "fecha no fim do mês".
+    static func closeDate(year: Int, month: Int, closingOn day: Int) -> Date {
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = 1
+        let first = calendar.date(from: components) ?? startOfDay(.now)
+        let length = calendar.range(of: .day, in: .month, for: first)?.count ?? 28
+        components.day = max(1, min(day, length))
+        return startOfDay(calendar.date(from: components) ?? first)
+    }
+
+    /// O período de fecho a que uma data pertence.
+    ///
+    /// Com fecho a 25, o mês comercial de setembro vai de 26 de agosto a 25 de setembro.
+    /// Uma data depois do dia de fecho já conta para o período seguinte.
+    static func commercialMonth(containing date: Date = .now, closingOn day: Int) -> MonthSpan {
+        let today = startOfDay(date)
+        let c = calendar.dateComponents([.year, .month], from: today)
+        var endYear = c.year ?? 0
+        var endMonth = c.month ?? 1
+
+        if today > closeDate(year: endYear, month: endMonth, closingOn: day) {
+            endMonth += 1
+            if endMonth > 12 {
+                endMonth = 1
+                endYear += 1
+            }
+        }
+
+        let end = closeDate(year: endYear, month: endMonth, closingOn: day)
+        var previousYear = endYear
+        var previousMonth = endMonth - 1
+        if previousMonth < 1 {
+            previousMonth = 12
+            previousYear -= 1
+        }
+        let previousClose = closeDate(year: previousYear, month: previousMonth, closingOn: day)
+        let start = calendar.date(byAdding: .day, value: 1, to: previousClose).map(startOfDay) ?? end
+
+        return MonthSpan(start: start, end: end)
+    }
+
+    /// `offset` negativo recua períodos de fecho. 0 é o período em curso.
+    static func commercialMonth(
+        offsetBy offset: Int,
+        closingOn day: Int,
+        from date: Date = .now
+    ) -> MonthSpan {
+        let current = commercialMonth(containing: date, closingOn: day)
+        // Ancorar no fim e recuar meses de calendário: recuar dias daria
+        // resultados diferentes conforme o comprimento dos meses pelo caminho.
+        let anchor = calendar.date(byAdding: .month, value: offset, to: current.end) ?? current.end
+        return commercialMonth(containing: anchor, closingOn: day)
+    }
+
+    /// Os últimos `count` períodos de fecho, do mais antigo para o atual.
+    static func lastCommercialMonths(
+        _ count: Int,
+        closingOn day: Int,
+        from date: Date = .now
+    ) -> [MonthSpan] {
+        guard count > 0 else { return [] }
+        return (0..<count).reversed().map {
+            commercialMonth(offsetBy: -$0, closingOn: day, from: date)
+        }
+    }
+
     /// Os últimos `count` meses, do mais antigo para o mais recente, incluindo o atual.
     static func lastMonths(_ count: Int, from date: Date = .now) -> [MonthSpan] {
         guard count > 0 else { return [] }
@@ -138,9 +210,22 @@ struct MonthSpan: Equatable, Hashable, Identifiable, Sendable {
     var id: Date { start }
 
     /// "abr" — abreviatura usada nos eixos dos gráficos.
+    ///
+    /// Vem do mês em que o período **termina**: com fecho a 25, o período que começa
+    /// a 26 de agosto é o mês de setembro, e é assim que se fala dele.
     var label: String {
-        let index = WeekMath.calendar.component(.month, from: start) - 1
+        let index = WeekMath.calendar.component(.month, from: end) - 1
         return WeekMath.monthAbbreviations[max(0, min(11, index))]
+    }
+
+    /// "26 ago – 25 set", para mostrar o período quando não é o mês de calendário.
+    var rangeLabel: String {
+        let cal = WeekMath.calendar
+        let startDay = cal.component(.day, from: start)
+        let endDay = cal.component(.day, from: end)
+        let startMonth = WeekMath.monthAbbreviations[cal.component(.month, from: start) - 1]
+        let endMonth = WeekMath.monthAbbreviations[cal.component(.month, from: end) - 1]
+        return "\(startDay) \(startMonth) – \(endDay) \(endMonth)"
     }
 
     func contains(_ date: Date) -> Bool {

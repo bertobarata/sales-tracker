@@ -26,11 +26,15 @@ struct DashboardView: View {
         allSummaries.first { $0.weekStartKey == week.startKey }
     }
 
+    /// O período de fecho em curso. Nem sempre é o mês de calendário: há carteiras
+    /// que fecham a meio do mês, e o objetivo mensal tem de seguir essa data.
+    private var closingMonth: MonthSpan {
+        WeekMath.commercialMonth(containing: .now, closingOn: settings.monthCloseDay)
+    }
+
     private var monthlyValor: Double {
-        let (year, month) = WeekMath.month(containing: .now)
-        let prefix = String(format: "%04d-%02d", year, month)
-        return allSummaries
-            .filter { $0.weekStartKey.hasPrefix(prefix) }
+        allSummaries
+            .filter { closingMonth.contains($0.weekStart) }
             .reduce(0) { $0 + $1.valorTotalFechos }
     }
 
@@ -70,13 +74,20 @@ struct DashboardView: View {
                     )
                 }
 
-                Section("Objetivo mensal") {
+                Section {
                     GoalBar(
                         label: "Valor fechos",
                         value: Int(monthlyValor.rounded(.up)),
                         goal: settings.goalMensalValor
                     )
                     monthlyRemainder
+                } header: {
+                    Text("Objetivo mensal")
+                } footer: {
+                    // Só vale a pena mostrar o período quando não é o mês inteiro.
+                    if settings.monthCloseDay < 28 {
+                        Text("Fecha a \(settings.monthCloseDay) · \(closingMonth.rangeLabel)")
+                    }
                 }
 
                 Section("Reuniões realizadas") {

@@ -57,10 +57,15 @@ struct TrendsView: View {
     }
 
     private var monthBuckets: [Bucket] {
-        WeekMath.lastMonths(period.rawValue).map { month in
+        // Segue o dia de fecho definido nas definições, para o gráfico e o objetivo
+        // mensal contarem o mesmo período.
+        WeekMath.lastCommercialMonths(
+            period.rawValue,
+            closingOn: AppSettings.current.monthCloseDay
+        ).map { month in
             let entries = allEntries.filter { month.contains($0.date) }
-            // Uma semana conta para o mês em que começa — mesma regra do valor mensal
-            // no `EntryStore`, para os dois números nunca se contradizerem.
+            // Uma semana conta para o período em que começa — mesma regra do valor
+            // mensal no `EntryStore`, para os dois números nunca se contradizerem.
             let valor = allSummaries
                 .filter { month.contains($0.weekStart) }
                 .reduce(0) { $0 + $1.valorTotalFechos }

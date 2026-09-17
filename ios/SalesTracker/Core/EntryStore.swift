@@ -102,12 +102,16 @@ struct EntryStore {
         return (try? context.fetch(descriptor)) ?? []
     }
 
-    /// Soma do valor de fechos das semanas cujo início cai no mês indicado.
-    /// Mesma regra da PWA: a semana conta para o mês em que *começa*.
-    func monthlyValorTotal(year: Int, month: Int) -> Double {
-        let prefix = String(format: "%04d-%02d", year, month)
+    /// Soma do valor de fechos das semanas cujo início cai no período indicado.
+    ///
+    /// Mesma regra da PWA — a semana conta para o período em que *começa* — mas o
+    /// período já não é o mês de calendário: é o mês comercial, que fecha no dia
+    /// escolhido nas definições.
+    func valorTotal(in span: MonthSpan) -> Double {
+        let start = span.start
+        let end = span.end
         let descriptor = FetchDescriptor<WeeklySummary>(
-            predicate: #Predicate { $0.weekStartKey.starts(with: prefix) }
+            predicate: #Predicate { $0.weekStart >= start && $0.weekStart <= end }
         )
         let matches = (try? context.fetch(descriptor)) ?? []
         return matches.reduce(0) { $0 + $1.valorTotalFechos }

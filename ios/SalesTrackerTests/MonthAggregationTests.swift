@@ -69,3 +69,71 @@ struct MonthAggregationTests {
         #expect(Set(weeks.map(\.startKey)).count == weeks.count)
     }
 }
+
+
+@Suite("Mês comercial com dia de fecho")
+struct CommercialMonthTests {
+
+    @Test("Com fecho a 25, o período vai do dia 26 do mês anterior ao 25 deste")
+    func periodSpansTheClosingCycle() {
+        let span = WeekMath.commercialMonth(containing: date(2026, 9, 10), closingOn: 25)
+        #expect(WeekMath.dayKey(span.start) == "2026-08-26")
+        #expect(WeekMath.dayKey(span.end) == "2026-09-25")
+    }
+
+    @Test("O próprio dia de fecho ainda pertence ao período que fecha")
+    func closingDayBelongsToTheClosingPeriod() {
+        let span = WeekMath.commercialMonth(containing: date(2026, 9, 25), closingOn: 25)
+        #expect(WeekMath.dayKey(span.end) == "2026-09-25")
+    }
+
+    @Test("O dia seguinte ao fecho já conta para o período seguinte")
+    func dayAfterClosingStartsTheNextPeriod() {
+        let span = WeekMath.commercialMonth(containing: date(2026, 9, 26), closingOn: 25)
+        #expect(WeekMath.dayKey(span.start) == "2026-09-26")
+        #expect(WeekMath.dayKey(span.end) == "2026-10-25")
+    }
+
+    @Test("Fecho a 31 dá o mês de calendário inteiro")
+    func closingOn31MatchesTheCalendarMonth() {
+        let span = WeekMath.commercialMonth(containing: date(2026, 9, 10), closingOn: 31)
+        #expect(WeekMath.dayKey(span.start) == "2026-09-01")
+        #expect(WeekMath.dayKey(span.end) == "2026-09-30")
+    }
+
+    @Test("Um dia que não existe no mês encurta-se ao último")
+    func impossibleDayClampsToMonthLength() {
+        // 2026 não é bissexto: fevereiro acaba a 28.
+        let span = WeekMath.commercialMonth(containing: date(2026, 2, 10), closingOn: 31)
+        #expect(WeekMath.dayKey(span.end) == "2026-02-28")
+
+        let leap = WeekMath.commercialMonth(containing: date(2028, 2, 10), closingOn: 30)
+        #expect(WeekMath.dayKey(leap.end) == "2028-02-29")
+    }
+
+    @Test("Recuar períodos atravessa a viragem do ano")
+    func offsetCrossesTheYearBoundary() {
+        let span = WeekMath.commercialMonth(offsetBy: -2, closingOn: 25, from: date(2026, 1, 10))
+        #expect(WeekMath.dayKey(span.start) == "2025-10-26")
+        #expect(WeekMath.dayKey(span.end) == "2025-11-25")
+    }
+
+    @Test("Os períodos saem por ordem, sem buracos nem sobreposições")
+    func periodsAreContiguous() {
+        let months = WeekMath.lastCommercialMonths(6, closingOn: 25, from: date(2026, 9, 10))
+        #expect(months.count == 6)
+
+        for (earlier, later) in zip(months, months.dropFirst()) {
+            let dayAfter = WeekMath.calendar.date(byAdding: .day, value: 1, to: earlier.end)!
+            // Sem isto, um dia podia cair fora de todos os períodos — ou dentro de dois.
+            #expect(WeekMath.dayKey(dayAfter) == WeekMath.dayKey(later.start))
+        }
+    }
+
+    @Test("O período é nomeado pelo mês em que termina")
+    func labelComesFromTheClosingMonth() {
+        let span = WeekMath.commercialMonth(containing: date(2026, 9, 10), closingOn: 25)
+        #expect(span.label == "set")
+        #expect(span.rangeLabel == "26 ago – 25 set")
+    }
+}

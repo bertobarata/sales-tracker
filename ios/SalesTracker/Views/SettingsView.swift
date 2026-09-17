@@ -16,6 +16,8 @@ struct SettingsView: View {
     private var goalValorSemana = 1500
     @AppStorage(SettingsKey.goalMensalValor, store: .shared)
     private var goalMensal = 5000
+    @AppStorage(SettingsKey.monthCloseDay, store: .shared)
+    private var monthCloseDay = 31
     @AppStorage(SettingsKey.remindersEnabled, store: .shared)
     private var remindersEnabled = false
     @AppStorage(SettingsKey.reminderHour, store: .shared)
@@ -43,10 +45,11 @@ struct SettingsView: View {
 
             Section {
                 amountField(label: "Valor de fechos", value: $goalMensal)
+                StepperRow(label: "Dia de fecho", value: closeDayBinding)
             } header: {
                 Text("Objetivo mensal")
             } footer: {
-                Text("Uma semana conta para o mês em que começa.")
+                Text(closeDayExplanation)
             }
 
             checklistSection
@@ -110,6 +113,7 @@ struct SettingsView: View {
         .onChange(of: goalContratos) { _, _ in WidgetRefresher.reload() }
         .onChange(of: goalValorSemana) { _, _ in WidgetRefresher.reload() }
         .onChange(of: goalMensal) { _, _ in WidgetRefresher.reload() }
+        .onChange(of: monthCloseDay) { _, _ in WidgetRefresher.reload() }
     }
 
     /// Tarefas diárias de sim/não, escritas por quem usa a app.
@@ -142,6 +146,25 @@ struct SettingsView: View {
         } footer: {
             Text("Aparecem no separador Hoje, para marcares. Apagar uma tarefa não apaga o histórico dos dias em que já a marcaste.")
         }
+    }
+
+    /// Nem todas as carteiras fecham no último dia do mês. O valor é limitado a 1–31 e
+    /// encurtado ao comprimento de cada mês no `WeekMath`, para não existir um dia 31
+    /// em fevereiro.
+    private var closeDayBinding: Binding<Int> {
+        Binding(
+            get: { monthCloseDay },
+            set: { monthCloseDay = max(1, min(31, $0)) }
+        )
+    }
+
+    private var closeDayExplanation: String {
+        let span = WeekMath.commercialMonth(closingOn: monthCloseDay)
+        if monthCloseDay >= 28 {
+            return "O mês fecha no último dia. Uma semana conta para o mês em que começa."
+        }
+        return "O mês fecha no dia \(monthCloseDay). O período em curso vai de "
+            + "\(span.rangeLabel). Uma semana conta para o período em que começa."
     }
 
     private func amountField(label: String, value: Binding<Int>) -> some View {

@@ -51,6 +51,7 @@ O QUE FAZ
 • Tarefas diárias de sim/não, com os nomes que o utilizador quiser
 • Painel da semana com progresso face aos objetivos que o próprio define
 • Objetivo mensal de valor fechado, com o que falta sempre à vista
+• Dia de fecho do mês configurável, para carteiras que não fecham no último dia
 • Relatório semanal em texto, pronto a copiar para uma mensagem
 • Exportação em CSV, para abrir no Numbers ou no Excel
 • Tendências do último mês, de 3 ou de 6 meses em gráficos

@@ -25,6 +25,7 @@ enum SettingsKey {
     static let goalContratosSemana = "goalContratosSemana"
     static let goalValorSemana = "goalValorSemana"
     static let goalMensalValor = "goalMensalValor"
+    static let monthCloseDay = "monthCloseDay"
     static let reminderHour = "reminderHour"
     static let reminderMinute = "reminderMinute"
     static let remindersEnabled = "remindersEnabled"
@@ -44,6 +45,9 @@ struct AppSettings: Equatable, Sendable {
     var goalContratosSemana: Int = 2
     var goalValorSemana: Int = 1500
     var goalMensalValor: Int = 5000
+    /// Dia em que o mês fecha. 31 dá o último dia em qualquer mês, porque se encurta
+    /// ao comprimento do mês — é por isso que serve de omissão sem precisar de sentinela.
+    var monthCloseDay: Int = 31
     var reminderHour: Int = 18
     var reminderMinute: Int = 30
     var remindersEnabled: Bool = false
@@ -68,6 +72,9 @@ struct AppSettings: Equatable, Sendable {
         }
         if d.object(forKey: SettingsKey.goalMensalValor) != nil {
             s.goalMensalValor = d.integer(forKey: SettingsKey.goalMensalValor)
+        }
+        if d.object(forKey: SettingsKey.monthCloseDay) != nil {
+            s.monthCloseDay = max(1, min(31, d.integer(forKey: SettingsKey.monthCloseDay)))
         }
         if d.object(forKey: SettingsKey.reminderHour) != nil {
             s.reminderHour = d.integer(forKey: SettingsKey.reminderHour)
