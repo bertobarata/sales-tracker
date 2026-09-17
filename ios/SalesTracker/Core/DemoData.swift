@@ -27,6 +27,8 @@ enum DemoData {
     static func seed(into context: ModelContext) {
         let store = EntryStore(context)
         let today = WeekMath.startOfDay(.now)
+        seedSettings()
+        let tasks = ChecklistStore.items
 
         // Doze semanas para as Tendências terem série suficiente para ler.
         for offset in stride(from: -11, through: 0, by: 1) {
@@ -45,6 +47,9 @@ enum DemoData {
                     entry[metric] = value
                     weekTotals[metric] += value
                 }
+                // Nem todos os dias com as tarefas todas feitas — um ecrã onde está tudo
+                // marcado não mostra como é que a secção se comporta por preencher.
+                entry.completedChecklistIDs = Set(tasks.prefix(index % 2 == 0 ? tasks.count : 1).map(\.id))
             }
 
             // As semanas fechadas levam resumo; a atual fica por fechar, que é o
@@ -56,7 +61,6 @@ enum DemoData {
         }
 
         store.save()
-        seedSettings()
     }
 
     /// Faz a série subir ao longo do trimestre em vez de ser uma linha plana,
@@ -83,10 +87,26 @@ enum DemoData {
         let d = UserDefaults.shared
         d.set(12, forKey: SettingsKey.goalPrimeirasReunioes)
         d.set(9, forKey: SettingsKey.goalSegundasReunioes)
+        d.set(5, forKey: SettingsKey.goalTerceirasReunioes)
+        d.set(3, forKey: SettingsKey.goalContratosSemana)
+        d.set(1800, forKey: SettingsKey.goalValorSemana)
         d.set(6000, forKey: SettingsKey.goalMensalValor)
         d.set(18, forKey: SettingsKey.reminderHour)
         d.set(30, forKey: SettingsKey.reminderMinute)
         d.set(true, forKey: SettingsKey.remindersEnabled)
+        // A introdução não aparece nas capturas dos outros separadores — exceto quando o
+        // teste a pede de propósito, e aí o argumento tem de ganhar à semente.
+        if !ProcessInfo.processInfo.arguments.contains("--reset-onboarding") {
+            d.set(SettingsKey.onboardingVersion, forKey: SettingsKey.onboardingCompletedVersion)
+        }
+
+        // Rótulos genéricos de propósito: as capturas vão para a App Store, e nada na
+        // app pode parecer preso a um empregador.
+        ChecklistStore.items = [
+            ChecklistItem(id: "demo-portal", label: "Acesso ao portal"),
+            ChecklistItem(id: "demo-crm", label: "Registo no CRM"),
+            ChecklistItem(id: "demo-follow", label: "Seguimentos do dia"),
+        ]
     }
 }
 #endif

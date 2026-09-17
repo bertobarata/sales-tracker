@@ -102,8 +102,8 @@ struct MetricCard: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(.quaternary.opacity(0.4), in: .rect(cornerRadius: 12))
+        .padding(.vertical, 14)
+        .glassEffect(.regular, in: .rect(cornerRadius: 16))
     }
 }
 
@@ -161,5 +161,56 @@ struct StepperRow: View {
         // Sem isto o VoiceOver anuncia só "mais" / "menos", sem dizer de que métrica.
         .accessibilityLabel(delta > 0 ? "Aumentar \(label)" : "Diminuir \(label)")
         .accessibilityIdentifier(delta > 0 ? "stepper.increment" : "stepper.decrement")
+    }
+}
+
+
+/// Botão de Definições na barra de navegação.
+///
+/// Está nos quatro separadores: quem quer mudar um objetivo não devia ter de adivinhar
+/// que a porta é o separador Hoje.
+struct SettingsToolbar: ViewModifier {
+    func body(content: Content) -> some View {
+        content.toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    SettingsView()
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .accessibilityLabel("Definições")
+            }
+        }
+    }
+}
+
+extension View {
+    func settingsToolbar() -> some View {
+        modifier(SettingsToolbar())
+    }
+}
+
+/// Indicador de gravação automática.
+///
+/// Substitui o botão "Guardar": em vez de pedir uma ação, confirma que já aconteceu.
+/// Discreto de propósito — é para tranquilizar de relance, não para interromper.
+struct SaveStatus: View {
+    let savedAt: Date?
+
+    var body: some View {
+        Group {
+            if let savedAt {
+                Label(
+                    "Guardado às " + savedAt.formatted(date: .omitted, time: .shortened),
+                    systemImage: "checkmark.circle.fill"
+                )
+                .foregroundStyle(.secondary)
+            } else {
+                Label("As alterações guardam-se sozinhas.", systemImage: "icloud")
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .font(.caption)
+        .animation(.default, value: savedAt)
     }
 }

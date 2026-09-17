@@ -3,11 +3,18 @@ import SwiftData
 
 struct DailyInputView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var weekOffset = 0
     @State private var selectedDate = WeekMath.startOfDay(.now)
     @State private var values: [Metric: Int] = [:]
-    @State private var isSaved = false
+    @State private var checklistDone: Set<String> = []
+    @State private var checklistItems: [ChecklistItem] = ChecklistStore.items
+
+    @State private var savedAt: Date?
+    /// Muda a cada alteração e reinicia o `task` de gravação, o que faz o atraso.
+    @State private var editToken = UUID()
+    @State private var hasPendingEdit = false
 
     private var store: EntryStore { EntryStore(context) }
     private var week: Week { WeekMath.week(offsetBy: weekOffset) }
@@ -29,36 +36,45 @@ struct DailyInputView: View {
                 } header: {
                     Text(headerTitle)
                 } footer: {
-                    if isSaved {
-                        Label("Registo guardado.", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                    }
+                    SaveStatus(savedAt: savedAt)
                 }
 
-                Section {
-                    Button("Guardar") { save() }
-                        .frame(maxWidth: .infinity)
-                        .fontWeight(.semibold)
+                if !checklistItems.isEmpty {
+                    Section("Tarefas do dia") {
+                        ForEach(checklistItems) { item in
+                            Toggle(item.label, isOn: checklistBinding(for: item))
+                        }
+                    }
                 }
             }
             .navigationTitle("Hoje")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        SettingsView()
-                    } label: {
-                        Image(systemName: "gearshape")
-                    }
-                }
-            }
+            .settingsToolbar()
         }
-        .onAppear(perform: load)
-        .onChange(of: selectedDate) { _, _ in load() }
+        .onAppear {
+            checklistItems = ChecklistStore.items
+            load()
+        }
+        .onChange(of: selectedDate) { _, _ in
+            flushPendingEdit()
+            load()
+        }
         .onChange(of: weekOffset) { _, _ in
             // Ao mudar de semana, salta para hoje se for a semana atual, senão para segunda.
             selectedDate = weekOffset == 0 ? today : week.start
         }
+        // Reinicia a cada alteração: só grava quando o utilizador pára de mexer.
+        .task(id: editToken) {
+            guard hasPendingEdit else { return }
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            commit()
+        }
+        // Sair da app é o momento em que se perdia tudo. Grava sem esperar pelo atraso.
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { flushPendingEdit() }
+        }
+        .onDisappear { flushPendingEdit() }
     }
 
     private var headerTitle: String {
@@ -106,28 +122,52 @@ struct DailyInputView: View {
             get: { values[metric] ?? 0 },
             set: {
                 values[metric] = max(0, $0)
-                isSaved = false
+                markEdited()
             }
         )
+    }
+
+    private func checklistBinding(for item: ChecklistItem) -> Binding<Bool> {
+        Binding(
+            get: { checklistDone.contains(item.id) },
+            set: { isOn in
+                if isOn {
+                    checklistDone.insert(item.id)
+                } else {
+                    checklistDone.remove(item.id)
+                }
+                markEdited()
+            }
+        )
+    }
+
+    private func markEdited() {
+        hasPendingEdit = true
+        editToken = UUID()
     }
 
     private func load() {
         if let existing = store.entry(for: selectedDate) {
             values = Dictionary(uniqueKeysWithValues: Metric.allCases.map { ($0, existing[$0]) })
-            isSaved = !existing.isEmpty
+            checklistDone = existing.completedChecklistIDs
+            savedAt = existing.isEmpty ? nil : existing.updatedAt
         } else {
             values = [:]
-            isSaved = false
+            checklistDone = []
+            savedAt = nil
         }
+        hasPendingEdit = false
     }
 
-    private func save() {
-        let entry = store.entryOrCreate(for: selectedDate)
-        for metric in Metric.allCases {
-            entry[metric] = values[metric] ?? 0
-        }
-        store.save()
-        isSaved = true
+    private func flushPendingEdit() {
+        guard hasPendingEdit else { return }
+        commit()
+    }
+
+    private func commit() {
+        hasPendingEdit = false
+        let didSave = store.saveDay(values, checklist: checklistDone, for: selectedDate)
+        savedAt = didSave ? .now : nil
         WidgetRefresher.reload()
     }
 }

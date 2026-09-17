@@ -8,6 +8,12 @@ struct SettingsView: View {
     private var goalPrimeiras = 10
     @AppStorage(SettingsKey.goalSegundasReunioes, store: .shared)
     private var goalSegundas = 8
+    @AppStorage(SettingsKey.goalTerceirasReunioes, store: .shared)
+    private var goalTerceiras = 4
+    @AppStorage(SettingsKey.goalContratosSemana, store: .shared)
+    private var goalContratos = 2
+    @AppStorage(SettingsKey.goalValorSemana, store: .shared)
+    private var goalValorSemana = 1500
     @AppStorage(SettingsKey.goalMensalValor, store: .shared)
     private var goalMensal = 5000
     @AppStorage(SettingsKey.remindersEnabled, store: .shared)
@@ -16,29 +22,34 @@ struct SettingsView: View {
     private var reminderHour = 18
     @AppStorage(SettingsKey.reminderMinute, store: .shared)
     private var reminderMinute = 30
+    @AppStorage(SettingsKey.onboardingCompletedVersion, store: .shared)
+    private var onboardingCompletedVersion = 0
 
     @State private var reminderTime = Date.now
     @State private var permissionDenied = false
+    @State private var checklistItems: [ChecklistItem] = []
+    @State private var newTaskLabel = ""
+    @State private var showsOnboarding = false
 
     var body: some View {
         Form {
-            Section("Objetivos semanais") {
+            Section("Objetivos da semana") {
                 StepperRow(label: "1as reuniões realizadas", value: $goalPrimeiras)
                 StepperRow(label: "2as reuniões realizadas", value: $goalSegundas)
+                StepperRow(label: "3as reuniões realizadas", value: $goalTerceiras)
+                StepperRow(label: "Contratos fechados", value: $goalContratos)
+                amountField(label: "Valor a fechar", value: $goalValorSemana)
             }
 
-            Section("Objetivo mensal") {
-                HStack {
-                    Text("Valor de fechos (€)")
-                        .font(.subheadline)
-                    Spacer()
-                    TextField("0", value: $goalMensal, format: .number)
-                        .keyboardType(.numberPad)
-                        .multilineTextAlignment(.trailing)
-                        .font(.title3.weight(.semibold).monospacedDigit())
-                        .frame(width: 110)
-                }
+            Section {
+                amountField(label: "Valor de fechos", value: $goalMensal)
+            } header: {
+                Text("Objetivo mensal")
+            } footer: {
+                Text("Uma semana conta para o mês em que começa.")
             }
+
+            checklistSection
 
             Section {
                 Toggle("Lembrete diário", isOn: $remindersEnabled)
@@ -55,6 +66,7 @@ struct SettingsView: View {
             }
 
             Section {
+                Button("Rever introdução") { showsOnboarding = true }
                 LabeledContent("Sincronização", value: "iCloud")
                 LabeledContent("Versão", value: Bundle.main.appVersion)
             } footer: {
@@ -63,7 +75,11 @@ struct SettingsView: View {
         }
         .navigationTitle("Definições")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showsOnboarding) {
+            OnboardingView()
+        }
         .onAppear {
+            checklistItems = ChecklistStore.items
             var components = DateComponents()
             components.hour = reminderHour
             components.minute = reminderMinute
@@ -90,7 +106,61 @@ struct SettingsView: View {
         }
         .onChange(of: goalPrimeiras) { _, _ in WidgetRefresher.reload() }
         .onChange(of: goalSegundas) { _, _ in WidgetRefresher.reload() }
+        .onChange(of: goalTerceiras) { _, _ in WidgetRefresher.reload() }
+        .onChange(of: goalContratos) { _, _ in WidgetRefresher.reload() }
+        .onChange(of: goalValorSemana) { _, _ in WidgetRefresher.reload() }
         .onChange(of: goalMensal) { _, _ in WidgetRefresher.reload() }
+    }
+
+    /// Tarefas diárias de sim/não, escritas por quem usa a app.
+    ///
+    /// A app não traz tarefas de nenhuma empresa: quem precisa de marcar "acesso ao portal
+    /// X" escreve-o aqui, e fica só no seu telemóvel.
+    private var checklistSection: some View {
+        Section {
+            ForEach($checklistItems) { $item in
+                TextField("Nome da tarefa", text: $item.label)
+                    .onSubmit { ChecklistStore.rename(id: item.id, to: item.label) }
+            }
+            .onDelete { offsets in
+                ChecklistStore.remove(atOffsets: offsets)
+                checklistItems = ChecklistStore.items
+            }
+            .onMove { source, destination in
+                ChecklistStore.move(fromOffsets: source, toOffset: destination)
+                checklistItems = ChecklistStore.items
+            }
+
+            HStack {
+                TextField("Acrescentar tarefa", text: $newTaskLabel)
+                    .onSubmit(addTask)
+                Button("Juntar", action: addTask)
+                    .disabled(newTaskLabel.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+        } header: {
+            Text("Tarefas do dia")
+        } footer: {
+            Text("Aparecem no separador Hoje, para marcares. Apagar uma tarefa não apaga o histórico dos dias em que já a marcaste.")
+        }
+    }
+
+    private func amountField(label: String, value: Binding<Int>) -> some View {
+        HStack {
+            Text(label)
+                .font(.subheadline)
+            Spacer()
+            TextField("0", value: value, format: .currency(code: "EUR"))
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .font(.title3.weight(.semibold).monospacedDigit())
+                .frame(width: 130)
+        }
+    }
+
+    private func addTask() {
+        ChecklistStore.add(newTaskLabel)
+        newTaskLabel = ""
+        checklistItems = ChecklistStore.items
     }
 
     private func applyReminderSettings() async {

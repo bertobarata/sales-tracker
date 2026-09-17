@@ -21,16 +21,28 @@ extension UserDefaults {
 enum SettingsKey {
     static let goalPrimeirasReunioes = "goalPrimeirasReunioesRealizadas"
     static let goalSegundasReunioes = "goalSegundasReunioesRealizadas"
+    static let goalTerceirasReunioes = "goalTerceirasReunioesRealizadas"
+    static let goalContratosSemana = "goalContratosSemana"
+    static let goalValorSemana = "goalValorSemana"
     static let goalMensalValor = "goalMensalValor"
     static let reminderHour = "reminderHour"
     static let reminderMinute = "reminderMinute"
     static let remindersEnabled = "remindersEnabled"
+    static let onboardingCompletedVersion = "onboardingCompletedVersion"
+
+    /// Versão da introdução já vista. Subir este número volta a mostrá-la a quem já a viu.
+    /// Vive aqui, e não na vista, porque `Core/` também é compilado no widget, que não
+    /// tem acesso às vistas da app.
+    static let onboardingVersion = 1
 }
 
 /// Snapshot das definições, para código fora das vistas (widget, agendador de notificações).
 struct AppSettings: Equatable, Sendable {
     var goalPrimeirasReunioes: Int = 10
     var goalSegundasReunioes: Int = 8
+    var goalTerceirasReunioes: Int = 4
+    var goalContratosSemana: Int = 2
+    var goalValorSemana: Int = 1500
     var goalMensalValor: Int = 5000
     var reminderHour: Int = 18
     var reminderMinute: Int = 30
@@ -44,6 +56,15 @@ struct AppSettings: Equatable, Sendable {
         }
         if d.object(forKey: SettingsKey.goalSegundasReunioes) != nil {
             s.goalSegundasReunioes = d.integer(forKey: SettingsKey.goalSegundasReunioes)
+        }
+        if d.object(forKey: SettingsKey.goalTerceirasReunioes) != nil {
+            s.goalTerceirasReunioes = d.integer(forKey: SettingsKey.goalTerceirasReunioes)
+        }
+        if d.object(forKey: SettingsKey.goalContratosSemana) != nil {
+            s.goalContratosSemana = d.integer(forKey: SettingsKey.goalContratosSemana)
+        }
+        if d.object(forKey: SettingsKey.goalValorSemana) != nil {
+            s.goalValorSemana = d.integer(forKey: SettingsKey.goalValorSemana)
         }
         if d.object(forKey: SettingsKey.goalMensalValor) != nil {
             s.goalMensalValor = d.integer(forKey: SettingsKey.goalMensalValor)
@@ -62,6 +83,7 @@ struct AppSettings: Equatable, Sendable {
         switch metric {
         case .primeirasReunioesRealizadas: goalPrimeirasReunioes
         case .segundasReunioesRealizadas: goalSegundasReunioes
+        case .terceirasReunioesRealizadas: goalTerceirasReunioes
         default: nil
         }
     }

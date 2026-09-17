@@ -42,14 +42,18 @@ O MetTracker é um registo diário de atividade comercial para quem trabalha por
 
 Ao fim do dia, escreve os números: contactos efetuados, reuniões marcadas, reuniões realizadas, pesquisas e referências. A aplicação trata do resto — soma a semana, compara com os objetivos que definiu e prepara o relatório para enviar.
 
+Uma introdução no primeiro arranque explica o funil e porque é que contar só os contratos fechados dá o alarme tarde de mais.
+
 O QUE FAZ
 
 • Registo diário das nove métricas de atividade, com teclado numérico e um toque por incremento
+• Guarda sozinho: muda de separador a meio e não se perde nada
+• Tarefas diárias de sim/não, com os nomes que o utilizador quiser
 • Painel da semana com progresso face aos objetivos que o próprio define
 • Objetivo mensal de valor fechado, com o que falta sempre à vista
 • Relatório semanal em texto, pronto a copiar para uma mensagem
 • Exportação em CSV, para abrir no Numbers ou no Excel
-• Tendências das últimas 8, 12 ou 26 semanas em gráficos
+• Tendências do último mês, de 3 ou de 6 meses em gráficos
 • Widgets no ecrã principal e no ecrã bloqueado, com incremento direto
 • Controlo no Centro de Controlo e atalhos para a Siri
 • Lembrete diário, só nos dias que ainda não registou
@@ -117,15 +121,17 @@ Idioma da interface: português de Portugal.
 
 ## Capturas de ecrã
 
-`ios/AppStore/screenshots/6.9/` — quatro imagens 1320×2868, geradas no simulador
+`ios/AppStore/screenshots/6.9/` — seis imagens 1320×2868, geradas no simulador
 iPhone 17 Pro Max com dados de demonstração:
 
 | Ficheiro | Ecrã |
 |---|---|
-| `01-hoje.png` | registo do dia |
-| `02-semana.png` | progresso face aos objetivos |
-| `03-relatorio.png` | relatório semanal |
-| `04-tendencias.png` | gráficos de tendência |
+| `00-introducao.png` | primeiro ecrã da introdução |
+| `01-funil.png` | o funil explicado |
+| `02-hoje.png` | registo do dia |
+| `03-semana.png` | progresso face aos objetivos |
+| `04-relatorio.png` | relatório semanal |
+| `05-tendencias.png` | gráficos de tendência |
 
 Para regenerar:
 

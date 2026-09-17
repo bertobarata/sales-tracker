@@ -3,14 +3,18 @@ import SwiftData
 
 struct WeeklyReportView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var allEntries: [DailyEntry]
     @Query(sort: \WeeklySummary.weekStart) private var allSummaries: [WeeklySummary]
 
     @State private var weekOffset = 0
     @State private var extra = WeeklyExtra.empty
     @State private var didCopy = false
-    @State private var didSave = false
     @State private var exportURL: URL?
+
+    @State private var savedAt: Date?
+    @State private var editToken = UUID()
+    @State private var hasPendingEdit = false
 
     private var store: EntryStore { EntryStore(context) }
     private var week: Week { WeekMath.week(offsetBy: weekOffset) }
@@ -29,27 +33,35 @@ struct WeeklyReportView: View {
                 }
 
                 Section("Totais da semana") {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 10) {
-                        MetricCard(label: "1.ª R.", value: totals[.primeirasReunioesRealizadas])
-                        MetricCard(label: "2.ª R.", value: totals[.segundasReunioesRealizadas])
-                        MetricCard(label: "3.ª R.", value: totals[.terceirasReunioesRealizadas])
-                        MetricCard(label: "Pesquisas", value: totals[.pesquisas])
-                        MetricCard(label: "Refs.", value: totals[.referencias])
-                        MetricCard(label: "Contactos", value: totals[.contactos])
+                    GlassEffectContainer(spacing: 10) {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 10) {
+                            MetricCard(label: "1.ª R.", value: totals[.primeirasReunioesRealizadas])
+                            MetricCard(label: "2.ª R.", value: totals[.segundasReunioesRealizadas])
+                            MetricCard(label: "3.ª R.", value: totals[.terceirasReunioesRealizadas])
+                            MetricCard(label: "Pesquisas", value: totals[.pesquisas])
+                            MetricCard(label: "Refs.", value: totals[.referencias])
+                            MetricCard(label: "Contactos", value: totals[.contactos])
+                        }
                     }
                     .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                 }
 
-                Section("Esta semana") {
-                    StepperRow(label: "Contratos fechados", value: $extra.contratosFechados)
+                Section {
+                    StepperRow(label: "Pessoas seguras", value: extraBinding(\.pessoasSeguras))
+                    StepperRow(label: "Contratos fechados", value: extraBinding(\.contratosFechados))
                     valorField
-                    StepperRow(label: "Pessoas seguras", value: $extra.pessoasSeguras)
+                } header: {
+                    Text("Esta semana")
+                } footer: {
+                    SaveStatus(savedAt: savedAt)
                 }
 
                 Section("Próxima semana") {
-                    StepperRow(label: "1.ª reuniões", value: $extra.reunioes1aProxSemana)
-                    StepperRow(label: "2.ª reuniões", value: $extra.reunioes2aProxSemana)
-                    StepperRow(label: "3.ª reuniões", value: $extra.reunioes3aProxSemana)
+                    StepperRow(label: "1.ª reuniões", value: extraBinding(\.reunioes1aProxSemana))
+                    StepperRow(label: "2.ª reuniões", value: extraBinding(\.reunioes2aProxSemana))
+                    StepperRow(label: "3.ª reuniões", value: extraBinding(\.reunioes3aProxSemana))
+                    LabeledContent("Total agendado", value: "\(extra.totalProximaSemana)")
+                        .font(.subheadline.weight(.semibold))
                 }
 
                 Section("Pré-visualização") {
@@ -60,18 +72,13 @@ struct WeeklyReportView: View {
 
                 Section {
                     ShareLink(item: reportText) {
-                        Label("Partilhar para WhatsApp", systemImage: "square.and.arrow.up")
+                        Label("Enviar ao seu manager", systemImage: "paperplane.fill")
                     }
                     Button {
                         UIPasteboard.general.string = reportText
                         didCopy = true
                     } label: {
                         Label(didCopy ? "Copiado!" : "Copiar texto", systemImage: "doc.on.doc")
-                    }
-                    Button {
-                        save()
-                    } label: {
-                        Label(didSave ? "Guardado!" : "Guardar semana", systemImage: "tray.and.arrow.down")
                     }
                     if let exportURL {
                         ShareLink(item: exportURL) {
@@ -88,42 +95,84 @@ struct WeeklyReportView: View {
             }
             .navigationTitle("Relatório")
             .navigationBarTitleDisplayMode(.inline)
+            .settingsToolbar()
         }
         .onAppear(perform: load)
-        .onChange(of: weekOffset) { _, _ in load() }
-        .onChange(of: extra) { _, _ in
-            didCopy = false
-            didSave = false
-            exportURL = nil
+        .onChange(of: weekOffset) { _, _ in
+            flushPendingEdit()
+            load()
         }
+        .task(id: editToken) {
+            guard hasPendingEdit else { return }
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            commit()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { flushPendingEdit() }
+        }
+        .onDisappear { flushPendingEdit() }
     }
 
+    /// Mostra `0,00 €` em vez de um zero solto — o campo é dinheiro e deve parecer dinheiro.
     private var valorField: some View {
         HStack {
-            Text("Valor total (€)")
+            Text("Valor total")
                 .font(.subheadline)
             Spacer()
-            TextField("0", value: $extra.valorTotalFechos, format: .number)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .font(.title3.weight(.semibold).monospacedDigit())
-                .frame(width: 110)
+            TextField(
+                "0",
+                value: Binding(
+                    get: { extra.valorTotalFechos },
+                    set: { extra.valorTotalFechos = max(0, $0); markEdited() }
+                ),
+                format: .currency(code: "EUR")
+            )
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.trailing)
+            .font(.title3.weight(.semibold).monospacedDigit())
+            .frame(width: 130)
         }
     }
 
-    private func load() {
-        extra = store.summary(for: week)?.extra ?? .empty
+    private func extraBinding(_ path: WritableKeyPath<WeeklyExtra, Int>) -> Binding<Int> {
+        Binding(
+            get: { extra[keyPath: path] },
+            set: {
+                extra[keyPath: path] = max(0, $0)
+                markEdited()
+            }
+        )
+    }
+
+    private func markEdited() {
+        hasPendingEdit = true
+        editToken = UUID()
         didCopy = false
-        didSave = false
         exportURL = nil
     }
 
-    private func save() {
+    private func load() {
+        let summary = store.summary(for: week)
+        extra = summary?.extra ?? .empty
+        savedAt = summary?.updatedAt
+        didCopy = false
+        exportURL = nil
+        hasPendingEdit = false
+    }
+
+    private func flushPendingEdit() {
+        guard hasPendingEdit else { return }
+        commit()
+    }
+
+    private func commit() {
+        hasPendingEdit = false
         let summary = store.summaryOrCreate(for: week)
         summary.totals = totals
         summary.extra = extra
         store.save()
-        didSave = true
+        savedAt = .now
         WidgetRefresher.reload()
     }
 }

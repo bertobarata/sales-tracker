@@ -43,6 +43,22 @@ enum Metric: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Nome usado nas legendas dos gráficos. O `shortLabel` é curto de mais para uma
+    /// legenda ("Refs." não se percebe fora de uma grelha de números).
+    var chartLabel: String {
+        switch self {
+        case .contactos: "Contactos"
+        case .primeirasReunioesMarcadas: "1.as marcadas"
+        case .segundasReunioesMarcadas: "2.as marcadas"
+        case .terceirasReunioesMarcadas: "3.as marcadas"
+        case .primeirasReunioesRealizadas: "1.as reuniões"
+        case .segundasReunioesRealizadas: "2.as reuniões"
+        case .terceirasReunioesRealizadas: "3.as reuniões"
+        case .pesquisas: "Pesquisas"
+        case .referencias: "Referências"
+        }
+    }
+
     /// Cabeçalho usado na exportação CSV — igual ao da folha Excel da PWA.
     var csvHeader: String {
         switch self {

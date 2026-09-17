@@ -20,6 +20,12 @@ struct DashboardView: View {
 
     private var totals: MetricTotals { MetricTotals.summing(weekEntries) }
 
+    /// Contratos e valor vivem no resumo semanal, não nos registos diários — é lá que
+    /// são escritos, no separador Relatório.
+    private var weekSummary: WeeklySummary? {
+        allSummaries.first { $0.weekStartKey == week.startKey }
+    }
+
     private var monthlyValor: Double {
         let (year, month) = WeekMath.month(containing: .now)
         let prefix = String(format: "%04d-%02d", year, month)
@@ -36,7 +42,7 @@ struct DashboardView: View {
                     dayStrip
                 }
 
-                Section("Objetivos") {
+                Section("Objetivos da semana") {
                     GoalBar(
                         label: "1as Reuniões",
                         value: totals[.primeirasReunioesRealizadas],
@@ -46,6 +52,21 @@ struct DashboardView: View {
                         label: "2as Reuniões",
                         value: totals[.segundasReunioesRealizadas],
                         goal: settings.goalSegundasReunioes
+                    )
+                    GoalBar(
+                        label: "3as Reuniões",
+                        value: totals[.terceirasReunioesRealizadas],
+                        goal: settings.goalTerceirasReunioes
+                    )
+                    GoalBar(
+                        label: "Contratos fechados",
+                        value: weekSummary?.contratosFechados ?? 0,
+                        goal: settings.goalContratosSemana
+                    )
+                    GoalBar(
+                        label: "Valor fechos",
+                        value: Int((weekSummary?.valorTotalFechos ?? 0).rounded(.up)),
+                        goal: settings.goalValorSemana
                     )
                 }
 
@@ -59,7 +80,7 @@ struct DashboardView: View {
                 }
 
                 Section("Reuniões realizadas") {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    GlassEffectContainer(spacing: 10) { LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         MetricCard(
                             label: "1as",
                             value: totals[.primeirasReunioesRealizadas],
@@ -76,20 +97,21 @@ struct DashboardView: View {
                             subtitle: "\(totals[.terceirasReunioesMarcadas]) marcadas"
                         )
                         MetricCard(label: "Contactos", value: totals[.contactos])
-                    }
+                    } }
                     .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                 }
 
                 Section("Prospeção") {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    GlassEffectContainer(spacing: 10) { LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         MetricCard(label: "Pesquisas", value: totals[.pesquisas])
                         MetricCard(label: "Referências", value: totals[.referencias])
-                    }
+                    } }
                     .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                 }
             }
             .navigationTitle("Semana")
             .navigationBarTitleDisplayMode(.inline)
+            .settingsToolbar()
         }
     }
 

@@ -11,8 +11,10 @@ final class ScreenshotTests: XCTestCase {
     }
 
     func testCaptureAppStoreScreenshots() {
+        captureOnboarding()
+
         let app = XCUIApplication()
-        app.launchArguments = ["--demo-data"]
+        app.launchArguments = ["--demo-data", "--skip-onboarding"]
         app.launch()
 
         let tabs = ["Hoje", "Semana", "Relatório", "Tendências"]
@@ -28,8 +30,28 @@ final class ScreenshotTests: XCTestCase {
 
             // Dá tempo aos gráficos de Tendências para desenharem antes do disparo.
             Thread.sleep(forTimeInterval: 1.5)
-            capture(named: String(format: "%02d-%@", index + 1, slug(tab)))
+            capture(named: String(format: "%02d-%@", index + 2, slug(tab)))
         }
+    }
+
+    /// A introdução é a primeira coisa que alguém vê na loja, por isso é a primeira
+    /// captura. Corre numa instância própria porque tem de arrancar por mostrar.
+    private func captureOnboarding() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo-data", "--reset-onboarding"]
+        app.launch()
+
+        let skip = app.buttons["Saltar introdução"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 20), "A introdução não apareceu")
+        Thread.sleep(forTimeInterval: 1.0)
+        capture(named: "00-introducao")
+
+        // Segunda página: o diagrama do funil, que é o que explica a app de relance.
+        app.swipeLeft()
+        Thread.sleep(forTimeInterval: 1.0)
+        capture(named: "01-funil")
+
+        app.terminate()
     }
 
     private func capture(named name: String) {

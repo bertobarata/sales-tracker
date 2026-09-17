@@ -11,6 +11,7 @@ enum CSVExport {
         columns += [
             "Contratos Fechados", "Valor Fechos (€)", "Pessoas Seguras",
             "1ª Próxima Semana", "2ª Próxima Semana", "3ª Próxima Semana",
+            "Total Próxima Semana",
         ]
 
         var lines = [columns.map(escape).joined(separator: ",")]
@@ -26,6 +27,7 @@ enum CSVExport {
                 String(extra.reunioes1aProxSemana),
                 String(extra.reunioes2aProxSemana),
                 String(extra.reunioes3aProxSemana),
+                String(extra.totalProximaSemana),
             ]
             lines.append(row.map(escape).joined(separator: ","))
         }

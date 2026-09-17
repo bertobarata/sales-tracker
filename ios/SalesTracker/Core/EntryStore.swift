@@ -34,6 +34,33 @@ struct EntryStore {
         return created
     }
 
+    /// Grava um dia inteiro e devolve `true` se ficou alguma coisa gravada.
+    ///
+    /// Com gravação automática, qualquer toque num campo passaria a criar registo. Um dia
+    /// todo a zeros não é um dia registado: contaria para as tendências, calaria o lembrete
+    /// de "ainda não registaste" e encheria o iCloud de nada. Por isso um dia que fique
+    /// vazio é apagado, e um dia vazio que ainda não exista nunca chega a ser criado.
+    @discardableResult
+    func saveDay(_ values: [Metric: Int], checklist: Set<String>, for date: Date) -> Bool {
+        let hasContent = Metric.allCases.contains { (values[$0] ?? 0) > 0 } || !checklist.isEmpty
+
+        guard hasContent else {
+            if let existing = entry(for: date) {
+                context.delete(existing)
+                save()
+            }
+            return false
+        }
+
+        let entry = entryOrCreate(for: date)
+        for metric in Metric.allCases {
+            entry[metric] = values[metric] ?? 0
+        }
+        entry.completedChecklistIDs = checklist
+        save()
+        return true
+    }
+
     func entries(in week: Week) -> [DailyEntry] {
         let start = week.start
         let end = week.end

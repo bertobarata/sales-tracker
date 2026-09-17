@@ -96,5 +96,12 @@ struct WeeklyExtra: Equatable, Sendable {
     var reunioes2aProxSemana: Int = 0
     var reunioes3aProxSemana: Int = 0
 
+    /// Reuniões agendadas para a semana seguinte, somadas. É o número que diz se a
+    /// semana que vem já tem trabalho marcado — ler os três em separado obriga a somar
+    /// de cabeça de cada vez.
+    var totalProximaSemana: Int {
+        reunioes1aProxSemana + reunioes2aProxSemana + reunioes3aProxSemana
+    }
+
     static let empty = WeeklyExtra()
 }

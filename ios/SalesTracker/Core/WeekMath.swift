@@ -84,6 +84,41 @@ enum WeekMath {
         return week(containing: shifted)
     }
 
+    // MARK: - Meses
+
+    /// `offset` negativo recua no tempo. 0 é o mês atual.
+    static func monthSpan(offsetBy offset: Int, from date: Date = .now) -> MonthSpan {
+        let base = startOfDay(date)
+        let shifted = calendar.date(byAdding: .month, value: offset, to: base) ?? base
+        let interval = calendar.dateInterval(of: .month, for: shifted)
+        let start = interval.map { startOfDay($0.start) } ?? shifted
+        let end = calendar.date(byAdding: .day, value: -1, to: interval?.end ?? shifted)
+            .map(startOfDay) ?? shifted
+        return MonthSpan(start: start, end: end)
+    }
+
+    /// Os últimos `count` meses, do mais antigo para o mais recente, incluindo o atual.
+    static func lastMonths(_ count: Int, from date: Date = .now) -> [MonthSpan] {
+        guard count > 0 else { return [] }
+        return (0..<count).reversed().map { monthSpan(offsetBy: -$0, from: date) }
+    }
+
+    /// As semanas que cobrem os últimos `months` meses, da mais antiga para a atual.
+    ///
+    /// A fronteira é o início do mês mais antigo: a semana que o contém entra inteira,
+    /// mesmo que comece no mês anterior. É o que evita um primeiro ponto do gráfico
+    /// artificialmente baixo por lhe faltarem dias.
+    static func weeksCovering(months: Int, from date: Date = .now) -> [Week] {
+        guard months > 0 else { return [] }
+        let firstDay = monthSpan(offsetBy: -(months - 1), from: date).start
+        let firstWeek = week(containing: firstDay)
+        let currentWeek = week(containing: date)
+        let span = calendar.dateComponents(
+            [.weekOfYear], from: firstWeek.start, to: currentWeek.start
+        ).weekOfYear ?? 0
+        return (0...max(0, span)).map { week(offsetBy: -span + $0, from: date) }
+    }
+
     static func month(containing date: Date = .now) -> (year: Int, month: Int) {
         let c = calendar.dateComponents([.year, .month], from: date)
         return (c.year ?? 0, c.month ?? 0)
@@ -91,5 +126,25 @@ enum WeekMath {
 
     static func isSameDay(_ a: Date, _ b: Date) -> Bool {
         calendar.isDate(a, inSameDayAs: b)
+    }
+}
+
+
+/// Um mês de calendário, do dia 1 ao último dia.
+struct MonthSpan: Equatable, Hashable, Identifiable, Sendable {
+    let start: Date
+    let end: Date
+
+    var id: Date { start }
+
+    /// "abr" — abreviatura usada nos eixos dos gráficos.
+    var label: String {
+        let index = WeekMath.calendar.component(.month, from: start) - 1
+        return WeekMath.monthAbbreviations[max(0, min(11, index))]
+    }
+
+    func contains(_ date: Date) -> Bool {
+        let day = WeekMath.startOfDay(date)
+        return day >= start && day <= end
     }
 }

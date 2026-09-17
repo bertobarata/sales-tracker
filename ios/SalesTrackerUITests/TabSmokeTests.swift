@@ -10,9 +10,17 @@ final class TabSmokeTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    func testAllTabsRenderOnEmptyDatabase() {
+    /// A introdução é saltada por argumento de lançamento. Sem isso, o resultado destes
+    /// testes dependia de o simulador já a ter visto numa execução anterior.
+    private func launchApp(extraArguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
+        app.launchArguments = ["--skip-onboarding", "--empty-store"] + extraArguments
         app.launch()
+        return app
+    }
+
+    func testAllTabsRenderOnEmptyDatabase() {
+        let app = launchApp()
 
         for tab in ["Hoje", "Semana", "Relatório", "Tendências"] {
             let button = app.tabBars.buttons[tab]
@@ -25,35 +33,42 @@ final class TabSmokeTests: XCTestCase {
         }
     }
 
-    func testDailyEntrySavesAndReloads() {
-        let app = XCUIApplication()
-        app.launch()
+    /// O que se perdia antes: escrever um número, mudar de separador e voltar a um campo
+    /// vazio. Agora grava sozinho, e é isso que este teste verifica de ponta a ponta.
+    func testDailyEntrySurvivesTabSwitch() {
+        let app = launchApp()
 
         app.tabBars.buttons["Hoje"].tap()
 
-        // Soma 1 à primeira métrica.
         let increment = app.buttons.matching(identifier: "stepper.increment").firstMatch
         XCTAssertTrue(increment.waitForExistence(timeout: 10), "Botão + não apareceu")
         increment.tap()
 
-        // O "Guardar" fica abaixo das nove métricas — é preciso lá chegar.
-        let save = app.buttons["Guardar"]
-        XCTAssertTrue(scrollTo(save, in: app), "Não foi possível chegar ao botão Guardar")
-        save.tap()
+        let field = app.textFields["Contactos efetuados"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5), "Campo dos contactos não apareceu")
+        XCTAssertEqual(field.value as? String, "1")
 
-        XCTAssertTrue(
-            app.staticTexts["Registo guardado."].waitForExistence(timeout: 5),
-            "A confirmação de gravação não apareceu"
-        )
+        // Sair do separador força a gravação sem esperar pelo atraso de 400 ms.
+        app.tabBars.buttons["Semana"].tap()
+        XCTAssertTrue(app.navigationBars["Semana"].waitForExistence(timeout: 10))
+        app.tabBars.buttons["Hoje"].tap()
+
+        XCTAssertTrue(field.waitForExistence(timeout: 10), "Campo não voltou a aparecer")
+        XCTAssertEqual(field.value as? String, "1", "O valor não sobreviveu à mudança de separador")
     }
 
-    /// `hittable` em vez de `exists`: numa lista, um elemento fora do ecrã
-    /// já existe na árvore mas não aceita toques.
-    private func scrollTo(_ element: XCUIElement, in app: XCUIApplication, maxSwipes: Int = 8) -> Bool {
-        for _ in 0..<maxSwipes {
-            if element.exists && element.isHittable { return true }
-            app.swipeUp()
-        }
-        return element.exists && element.isHittable
+    func testOnboardingAppearsOnFirstLaunchAndCanBeDismissed() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--reset-onboarding", "--empty-store"]
+        app.launch()
+
+        let skip = app.buttons["Saltar introdução"]
+        XCTAssertTrue(skip.waitForExistence(timeout: 15), "A introdução não apareceu no primeiro arranque")
+        skip.tap()
+
+        XCTAssertTrue(
+            app.tabBars.buttons["Hoje"].waitForExistence(timeout: 10),
+            "A app não ficou utilizável depois de saltar a introdução"
+        )
     }
 }

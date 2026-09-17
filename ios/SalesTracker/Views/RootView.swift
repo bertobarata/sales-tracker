@@ -6,6 +6,9 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var selection: Screen = .hoje
 
+    @AppStorage(SettingsKey.onboardingCompletedVersion, store: .shared)
+    private var onboardingCompletedVersion = 0
+
     /// Nome próprio para não tapar o `Tab` do SwiftUI usado abaixo.
     enum Screen: Hashable {
         case hoje, semana, relatorio, tendencias
@@ -25,6 +28,12 @@ struct RootView: View {
             Tab("Tendências", systemImage: "chart.xyaxis.line", value: Screen.tendencias) {
                 TrendsView()
             }
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { onboardingCompletedVersion < SettingsKey.onboardingVersion },
+            set: { _ in }
+        )) {
+            OnboardingView()
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }

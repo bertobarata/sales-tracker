@@ -25,7 +25,7 @@ struct CSVExportTests {
     @Test("O cabeçalho tem as mesmas colunas e ordem da folha da PWA")
     func header() {
         let line = CSVExport.csv(for: []).split(separator: "\n").first!
-        #expect(line == "Semana (início),Semana (fim),Contactos,1as Marcadas,2as Marcadas,3as Marcadas,1as Realizadas,2as Realizadas,3as Realizadas,Pesquisas,Referências,Contratos Fechados,Valor Fechos (€),Pessoas Seguras,1ª Próxima Semana,2ª Próxima Semana,3ª Próxima Semana")
+        #expect(line == "Semana (início),Semana (fim),Contactos,1as Marcadas,2as Marcadas,3as Marcadas,1as Realizadas,2as Realizadas,3as Realizadas,Pesquisas,Referências,Contratos Fechados,Valor Fechos (€),Pessoas Seguras,1ª Próxima Semana,2ª Próxima Semana,3ª Próxima Semana,Total Próxima Semana")
     }
 
     @Test("As semanas saem ordenadas da mais antiga para a mais recente")
@@ -53,5 +53,37 @@ struct CSVExportTests {
         let s = summary(week: WeekMath.week(containing: date(2026, 4, 22)), valor: 1234.56, primeiras: 0)
         let row = CSVExport.csv(for: [s]).split(separator: "\n")[1]
         #expect(row.contains("1234.56"))
+    }
+}
+
+
+@Suite("Total das reuniões da próxima semana")
+struct NextWeekTotalTests {
+
+    @Test("O total é a soma das três")
+    func totalSumsAllThree() {
+        let extra = WeeklyExtra(
+            reunioes1aProxSemana: 4,
+            reunioes2aProxSemana: 3,
+            reunioes3aProxSemana: 2
+        )
+        #expect(extra.totalProximaSemana == 9)
+    }
+
+    @Test("A coluna do total aparece no CSV com o valor certo")
+    func csvCarriesTheTotal() {
+        let week = WeekMath.week(containing: Date.now)
+        let summary = WeeklySummary(week: week)
+        summary.extra = WeeklyExtra(
+            reunioes1aProxSemana: 4,
+            reunioes2aProxSemana: 3,
+            reunioes3aProxSemana: 2
+        )
+
+        let csv = CSVExport.csv(for: [summary])
+        let lines = csv.split(separator: "\n").map(String.init)
+
+        #expect(lines[0].hasSuffix("Total Próxima Semana"))
+        #expect(lines[1].hasSuffix("4,3,2,9"))
     }
 }
