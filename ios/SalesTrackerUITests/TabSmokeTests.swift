@@ -57,6 +57,69 @@ final class TabSmokeTests: XCTestCase {
         XCTAssertEqual(field.value as? String, "1", "O valor não sobreviveu à mudança de separador")
     }
 
+    /// O campo do valor formatava a moeda a cada tecla: escrever "1" virava "1,00 €" e o
+    /// resto ia por cima. E não havia como fechar o teclado do teclado numérico.
+    func testWeeklyValueCanBeTypedAndKeyboardDismissed() {
+        let app = launchApp()
+
+        app.tabBars.buttons["Relatório"].tap()
+        XCTAssertTrue(app.navigationBars["Relatório"].waitForExistence(timeout: 10))
+
+        let field = app.textFields["Valor total"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10), "Campo do valor não apareceu")
+        field.tap()
+        field.typeText("1450")
+
+        let done = app.buttons["OK"]
+        XCTAssertTrue(done.waitForExistence(timeout: 5), "Sem botão para fechar o teclado")
+        done.tap()
+
+        let shown = (field.value as? String) ?? ""
+        XCTAssertTrue(shown.contains("450"), "O valor escrito não ficou no campo: \(shown)")
+        XCTAssertTrue(shown.contains("€"), "O valor não ficou formatado como moeda: \(shown)")
+    }
+
+    /// Escrever por cima de um valor já existente era o caso pior: o texto antigo ficava
+    /// lá e o novo era inserido no meio — "1000" mais "2500" dava 25 001 000,00 €.
+    func testExistingValueCanBeReplaced() {
+        let app = launchApp()
+
+        app.tabBars.buttons["Relatório"].tap()
+        let field = app.textFields["Valor total"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+
+        field.tap()
+        field.typeText("1000")
+        app.buttons["OK"].tap()
+
+        field.tap()
+        field.typeText("2500")
+        app.buttons["OK"].tap()
+
+        let shown = (field.value as? String) ?? ""
+        XCTAssertTrue(shown.contains("500"), "Não deixou substituir o valor: \(shown)")
+        XCTAssertFalse(shown.contains("1 000"), "O valor antigo ficou lá: \(shown)")
+    }
+
+    /// Entrar no campo e sair sem escrever nada não pode apagar o que lá estava.
+    func testLeavingTheFieldBlankKeepsThePreviousValue() {
+        let app = launchApp()
+
+        app.tabBars.buttons["Relatório"].tap()
+        let field = app.textFields["Valor total"]
+        XCTAssertTrue(field.waitForExistence(timeout: 10))
+
+        field.tap()
+        field.typeText("750")
+        app.buttons["OK"].tap()
+
+        field.tap()
+        app.buttons["OK"].tap()
+
+        let shown = (field.value as? String) ?? ""
+        XCTAssertTrue(shown.contains("750"), "Sair em branco apagou o valor: \(shown)")
+    }
+
     func testOnboardingAppearsOnFirstLaunchAndCanBeDismissed() {
         let app = XCUIApplication()
         app.launchArguments = ["--reset-onboarding", "--empty-store"]

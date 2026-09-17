@@ -91,8 +91,10 @@ enum DemoData {
         d.set(3, forKey: SettingsKey.goalContratosSemana)
         d.set(1800, forKey: SettingsKey.goalValorSemana)
         d.set(6000, forKey: SettingsKey.goalMensalValor)
-        d.set(18, forKey: SettingsKey.reminderHour)
-        d.set(30, forKey: SettingsKey.reminderMinute)
+        d.set(9, forKey: SettingsKey.reminderMorningHour)
+        d.set(0, forKey: SettingsKey.reminderMorningMinute)
+        d.set(17, forKey: SettingsKey.reminderEveningHour)
+        d.set(0, forKey: SettingsKey.reminderEveningMinute)
         d.set(true, forKey: SettingsKey.remindersEnabled)
         // A introdução não aparece nas capturas dos outros separadores — exceto quando o
         // teste a pede de propósito, e aí o argumento tem de ganhar à semente.

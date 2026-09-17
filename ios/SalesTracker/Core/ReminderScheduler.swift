@@ -35,24 +35,31 @@ enum ReminderScheduler {
             let key = WeekMath.dayKey(day)
             if filledDayKeys.contains(key) { continue }
 
-            var components = WeekMath.calendar.dateComponents([.year, .month, .day], from: day)
-            components.hour = settings.reminderHour
-            components.minute = settings.reminderMinute
+            for time in settings.reminderTimes {
+                var components = WeekMath.calendar.dateComponents([.year, .month, .day], from: day)
+                components.hour = time.hour
+                components.minute = time.minute
 
-            guard let fireDate = WeekMath.calendar.date(from: components), fireDate > now else { continue }
+                // Uma hora que já passou hoje não se agenda — dispararia de imediato.
+                guard let fireDate = WeekMath.calendar.date(from: components),
+                      fireDate > now
+                else { continue }
 
-            let content = UNMutableNotificationContent()
-            content.title = "Sales Tracker"
-            content.body = "Ainda não registaste o teu dia de hoje!"
-            content.sound = .default
+                let content = UNMutableNotificationContent()
+                content.title = "MetTracker"
+                content.body = time.moment.body
+                content.sound = .default
 
-            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-            let request = UNNotificationRequest(
-                identifier: identifierPrefix + key,
-                content: content,
-                trigger: trigger
-            )
-            try? await center.add(request)
+                let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+                let request = UNNotificationRequest(
+                    // O momento entra no identificador: sem isso o segundo lembrete do
+                    // dia substituía o primeiro em vez de se juntar a ele.
+                    identifier: "\(identifierPrefix)\(key)-\(time.moment.rawValue)",
+                    content: content,
+                    trigger: trigger
+                )
+                try? await center.add(request)
+            }
         }
     }
 

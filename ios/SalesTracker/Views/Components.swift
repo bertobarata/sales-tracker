@@ -214,3 +214,91 @@ struct SaveStatus: View {
         .animation(.default, value: savedAt)
     }
 }
+
+
+/// Campo de dinheiro.
+///
+/// Um `TextField(value:format:.currency)` reanalisa o texto a cada tecla: escrever "1"
+/// passa logo a "1,00 €" e a tecla seguinte vai parar ao sítio errado. Com gravação
+/// automática por cima, a vista redesenha a meio e o campo volta ao início.
+///
+/// Aqui edita-se texto simples e só se converte para número quando o campo perde o foco.
+/// Enquanto não está a ser editado mostra o valor formatado, que é o que interessa ler.
+struct CurrencyField: View {
+    let label: String
+    @Binding var amount: Double
+    var onCommit: () -> Void = {}
+
+    @State private var text = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.subheadline)
+            Spacer()
+            TextField(placeholder, text: $text)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .font(.title3.weight(.semibold).monospacedDigit())
+                .frame(width: 140)
+                .focused($isFocused)
+                .accessibilityLabel(label)
+        }
+        .contentShape(.rect)
+        // Tocar na linha inteira entra no campo: o alvo do número sozinho é pequeno.
+        .onTapGesture { isFocused = true }
+        .onAppear { text = displayText }
+        .onChange(of: isFocused) { _, focused in
+            // Entrar no campo limpa-o e deixa o valor antigo como sugestão. Num campo de
+            // dinheiro quase nunca se emenda um dígito — escreve-se o valor todo de novo,
+            // e ter de apagar o anterior à mão era o que o tornava insuportável.
+            // Sair sem escrever nada mantém o que lá estava.
+            if focused {
+                text = ""
+            } else {
+                commit()
+            }
+        }
+        .onChange(of: amount) { _, _ in
+            // Uma alteração vinda de fora (iCloud, mudança de semana) só pode reescrever
+            // o campo quando não está a ser editado, senão apaga o que se está a escrever.
+            if !isFocused { text = displayText }
+        }
+        .toolbar {
+            if isFocused {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("OK") { isFocused = false }
+                }
+            }
+        }
+    }
+
+    private var displayText: String {
+        amount.formatted(.currency(code: "EUR"))
+    }
+
+    /// Enquanto se escreve, o valor anterior fica como sugestão em cinzento.
+    private var placeholder: String {
+        amount > 0 ? displayText : "0"
+    }
+
+    private func commit() {
+        let separator = Locale.current.decimalSeparator ?? ","
+        let cleaned = text
+            .replacingOccurrences(of: separator, with: ".")
+            .replacingOccurrences(of: ",", with: ".")
+            .filter { $0.isNumber || $0 == "." }
+
+        defer { text = displayText }
+
+        // Campo deixado em branco não é zero: é não ter mexido.
+        guard !cleaned.isEmpty, let parsed = Double(cleaned) else { return }
+
+        let rounded = (max(0, parsed) * 100).rounded() / 100
+        guard rounded != amount else { return }
+        amount = rounded
+        onCommit()
+    }
+}

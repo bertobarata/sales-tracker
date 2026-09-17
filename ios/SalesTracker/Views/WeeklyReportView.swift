@@ -115,24 +115,16 @@ struct WeeklyReportView: View {
     }
 
     /// Mostra `0,00 €` em vez de um zero solto — o campo é dinheiro e deve parecer dinheiro.
+    /// A gravação só acontece ao sair do campo, não a cada tecla.
     private var valorField: some View {
-        HStack {
-            Text("Valor total")
-                .font(.subheadline)
-            Spacer()
-            TextField(
-                "0",
-                value: Binding(
-                    get: { extra.valorTotalFechos },
-                    set: { extra.valorTotalFechos = max(0, $0); markEdited() }
-                ),
-                format: .currency(code: "EUR")
-            )
-            .keyboardType(.decimalPad)
-            .multilineTextAlignment(.trailing)
-            .font(.title3.weight(.semibold).monospacedDigit())
-            .frame(width: 130)
-        }
+        CurrencyField(
+            label: "Valor total",
+            amount: Binding(
+                get: { extra.valorTotalFechos },
+                set: { extra.valorTotalFechos = max(0, $0) }
+            ),
+            onCommit: markEdited
+        )
     }
 
     private func extraBinding(_ path: WritableKeyPath<WeeklyExtra, Int>) -> Binding<Int> {

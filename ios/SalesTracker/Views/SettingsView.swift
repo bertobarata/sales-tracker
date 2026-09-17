@@ -20,14 +20,21 @@ struct SettingsView: View {
     private var monthCloseDay = 31
     @AppStorage(SettingsKey.remindersEnabled, store: .shared)
     private var remindersEnabled = false
-    @AppStorage(SettingsKey.reminderHour, store: .shared)
-    private var reminderHour = 18
-    @AppStorage(SettingsKey.reminderMinute, store: .shared)
-    private var reminderMinute = 30
+    @AppStorage(SettingsKey.reminderMorningHour, store: .shared)
+    private var morningHour = 9
+    @AppStorage(SettingsKey.reminderMorningMinute, store: .shared)
+    private var morningMinute = 0
+    @AppStorage(SettingsKey.reminderEveningHour, store: .shared)
+    private var eveningHour = 17
+    @AppStorage(SettingsKey.reminderEveningMinute, store: .shared)
+    private var eveningMinute = 0
+    @AppStorage(SettingsKey.appearance, store: .shared)
+    private var appearance = AppAppearance.system.rawValue
     @AppStorage(SettingsKey.onboardingCompletedVersion, store: .shared)
     private var onboardingCompletedVersion = 0
 
-    @State private var reminderTime = Date.now
+    @State private var morningTime = Date.now
+    @State private var eveningTime = Date.now
     @State private var permissionDenied = false
     @State private var checklistItems: [ChecklistItem] = []
     @State private var newTaskLabel = ""
@@ -55,17 +62,31 @@ struct SettingsView: View {
             checklistSection
 
             Section {
-                Toggle("Lembrete diário", isOn: $remindersEnabled)
+                Toggle("Lembretes diários", isOn: $remindersEnabled)
                 if remindersEnabled {
-                    DatePicker("Hora", selection: $reminderTime, displayedComponents: .hourAndMinute)
+                    DatePicker("De manhã", selection: $morningTime, displayedComponents: .hourAndMinute)
+                    DatePicker("Ao fim da tarde", selection: $eveningTime, displayedComponents: .hourAndMinute)
                 }
             } footer: {
                 if permissionDenied {
                     Text("As notificações estão desativadas nas Definições do iPhone. Ativa-as aí para receberes lembretes.")
                         .foregroundStyle(.orange)
                 } else {
-                    Text("O lembrete só aparece nos dias que ainda não registaste.")
+                    Text("Dois por dia, e só nos dias que ainda não registaste.")
                 }
+            }
+
+            Section {
+                Picker("Aspeto", selection: $appearance) {
+                    ForEach(AppAppearance.allCases) { option in
+                        Text(option.label).tag(option.rawValue)
+                    }
+                }
+                .pickerStyle(.segmented)
+            } header: {
+                Text("Aspeto")
+            } footer: {
+                Text("\"Sistema\" segue o que o iPhone estiver a usar.")
             }
 
             Section {
@@ -83,15 +104,19 @@ struct SettingsView: View {
         }
         .onAppear {
             checklistItems = ChecklistStore.items
-            var components = DateComponents()
-            components.hour = reminderHour
-            components.minute = reminderMinute
-            reminderTime = WeekMath.calendar.date(from: components) ?? .now
+            morningTime = time(hour: morningHour, minute: morningMinute)
+            eveningTime = time(hour: eveningHour, minute: eveningMinute)
         }
-        .onChange(of: reminderTime) { _, newValue in
+        .onChange(of: morningTime) { _, newValue in
             let components = WeekMath.calendar.dateComponents([.hour, .minute], from: newValue)
-            reminderHour = components.hour ?? 18
-            reminderMinute = components.minute ?? 30
+            morningHour = components.hour ?? 9
+            morningMinute = components.minute ?? 0
+            Task { await applyReminderSettings() }
+        }
+        .onChange(of: eveningTime) { _, newValue in
+            let components = WeekMath.calendar.dateComponents([.hour, .minute], from: newValue)
+            eveningHour = components.hour ?? 17
+            eveningMinute = components.minute ?? 0
             Task { await applyReminderSettings() }
         }
         .onChange(of: remindersEnabled) { _, isOn in
@@ -167,23 +192,30 @@ struct SettingsView: View {
             + "\(span.rangeLabel). Uma semana conta para o período em que começa."
     }
 
+    /// Os objetivos são euros inteiros, mas o campo é o mesmo do relatório: editar texto
+    /// e converter no fim. Com formatação de moeda a cada tecla, escrever um valor novo
+    /// por cima do antigo era impossível.
     private func amountField(label: String, value: Binding<Int>) -> some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
-            Spacer()
-            TextField("0", value: value, format: .currency(code: "EUR"))
-                .keyboardType(.numberPad)
-                .multilineTextAlignment(.trailing)
-                .font(.title3.weight(.semibold).monospacedDigit())
-                .frame(width: 130)
-        }
+        CurrencyField(
+            label: label,
+            amount: Binding(
+                get: { Double(value.wrappedValue) },
+                set: { value.wrappedValue = max(0, Int($0.rounded())) }
+            )
+        )
     }
 
     private func addTask() {
         ChecklistStore.add(newTaskLabel)
         newTaskLabel = ""
         checklistItems = ChecklistStore.items
+    }
+
+    private func time(hour: Int, minute: Int) -> Date {
+        var components = DateComponents()
+        components.hour = hour
+        components.minute = minute
+        return WeekMath.calendar.date(from: components) ?? .now
     }
 
     private func applyReminderSettings() async {

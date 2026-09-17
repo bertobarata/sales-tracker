@@ -9,6 +9,9 @@ struct RootView: View {
     @AppStorage(SettingsKey.onboardingCompletedVersion, store: .shared)
     private var onboardingCompletedVersion = 0
 
+    @AppStorage(SettingsKey.appearance, store: .shared)
+    private var appearance = AppAppearance.system.rawValue
+
     /// Nome próprio para não tapar o `Tab` do SwiftUI usado abaixo.
     enum Screen: Hashable {
         case hoje, semana, relatorio, tendencias
@@ -35,6 +38,8 @@ struct RootView: View {
         )) {
             OnboardingView()
         }
+        // Fica no topo para apanhar também a introdução, que é apresentada por cima.
+        .preferredColorScheme(AppAppearance(rawValue: appearance)?.colorScheme)
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { await refreshReminders() }

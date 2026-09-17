@@ -57,7 +57,8 @@ O QUE FAZ
 • Tendências do último mês, de 3 ou de 6 meses em gráficos
 • Widgets no ecrã principal e no ecrã bloqueado, com incremento direto
 • Controlo no Centro de Controlo e atalhos para a Siri
-• Lembrete diário, só nos dias que ainda não registou
+• Dois lembretes por dia, só nos dias que ainda não registou
+• Aspeto claro, escuro ou a seguir o sistema
 
 SEM CONTA, SEM SERVIDOR
 
