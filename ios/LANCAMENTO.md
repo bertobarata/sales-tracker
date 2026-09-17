@@ -167,3 +167,29 @@ para quem instalar a app da loja, e falha em silêncio.
    um dia, para o esquema aparecer em Development
 2. https://icloud.developer.apple.com → contentor `iCloud.com.bertobarata.salestracker`
 3. Schema → **Deploy Schema to Production**
+
+
+## Armadilha do `INFOPLIST_KEY_*`
+
+As definições `INFOPLIST_KEY_<chave>` só são lidas quando é o Xcode a gerar o
+Info.plist (`GENERATE_INFOPLIST_FILE = YES`). Este alvo usa um Info.plist próprio,
+escrito pelo XcodeGen a partir do bloco `info:`, por isso todas as `INFOPLIST_KEY_*`
+eram **ignoradas sem aviso nenhum** — o build passava, os testes passavam, e o
+problema só apareceu na validação da Apple, depois do upload:
+
+```
+Invalid bundle. No orientations were specified in the
+com.bertobarata.salestracker bundle.
+```
+
+Quatro chaves estavam em falta ou erradas no `.ipa` da build 1: orientações,
+localizações, região de desenvolvimento (`en` em vez de `pt-PT`) e a versão, que
+ficava fixa em 1.0 (1) por o Info.plist gerado levar valores literais.
+
+**Regra para este projeto: chaves do Info.plist vivem no bloco `info: properties:`.**
+As versões referenciam as variáveis, `$(MARKETING_VERSION)` e
+`$(CURRENT_PROJECT_VERSION)`, senão subir a versão não muda o que vai no pacote.
+
+Decidido ao mesmo tempo: `TARGETED_DEVICE_FAMILY = 1`, só iPhone. Suportar iPad
+obrigaria às quatro orientações para multitarefa e a um conjunto próprio de
+capturas de ecrã. A app continua a instalar em iPad em modo de compatibilidade.
