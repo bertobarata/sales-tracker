@@ -8,15 +8,15 @@ apareçam no mesmo diff.
 
 | | |
 |---|---|
-| Build | ✅ passa (Xcode 27, iOS 18.0+, Swift 6 modo estrito) |
-| Testes | ✅ 23 unitários + 2 de UI |
+| Build | ✅ passa (Xcode 27, iOS 26.0+, Swift 6 modo estrito) |
+| Testes | ✅ 42 unitários (Swift Testing) + 4 de UI |
 | Sincronização | CloudKit privado (`iCloud.com.bertobarata.salestracker`) |
 | Bundle ID | `com.bertobarata.salestracker` |
 | Widget | `com.bertobarata.salestracker.widget` |
 | App Group | `group.com.bertobarata.salestracker` |
 | Assinatura | ✅ archive e export de App Store a passar, equipa `7ACX25JD5D` |
 | Nome na loja | MetTracker (ver aviso em `AppStore/METADATA.md`) |
-| Ícone | ✅ `Assets.xcassets`, 1024×1024 sem alfa |
+| Ícone | ✅ funil, `Assets.xcassets`, 1024×1024 sem alfa; camadas para Liquid Glass em `AppStore/icon/` |
 | Capturas | ✅ quatro, 6.9" (1320×2868), em `AppStore/screenshots/` |
 | Metadados | ✅ `AppStore/METADATA.md` |
 
@@ -193,3 +193,19 @@ As versões referenciam as variáveis, `$(MARKETING_VERSION)` e
 Decidido ao mesmo tempo: `TARGETED_DEVICE_FAMILY = 1`, só iPhone. Suportar iPad
 obrigaria às quatro orientações para multitarefa e a um conjunto próprio de
 capturas de ecrã. A app continua a instalar em iPad em modo de compatibilidade.
+
+
+## Armadilhas apanhadas a testar
+
+**Um `ModelContainer` local não pode morrer antes do `ModelContext`.** O `EntryStore`
+só guarda o contexto; se o contentor que o criou sair de âmbito, o primeiro `fetch`
+rebenta dentro do SwiftData com `EXC_BREAKPOINT` — não com um erro apanhável. Nos testes
+o contentor é guardado numa struct que vive tanto quanto o teste.
+
+**A app é o hospedeiro dos testes unitários**, por isso arranca em cada execução. Sob
+XCTest passa a usar base em memória, para não ficar a tentar ligar-se a uma conta iCloud
+que não existe no simulador.
+
+**Os testes de UI precisam de estado determinado.** Com gravação automática, o que uma
+execução escreve fica no simulador e falseia a seguinte. Daí `--empty-store`,
+`--skip-onboarding` e `--reset-onboarding`, todos dentro de `#if DEBUG`.

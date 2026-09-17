@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Camada de fundo do funil: os três degraus que estreitam.
+       Sem máscara e sem fundo — o Icon Composer trata das duas coisas. -->
+  <g fill="#FFFFFF">
+    <rect x="214" y="286" width="596" height="118" rx="59"/>
+    <rect x="290" y="444" width="444" height="118" rx="59"/>
+    <rect x="366" y="602" width="292" height="118" rx="59"/>
+  </g>
+</svg>
