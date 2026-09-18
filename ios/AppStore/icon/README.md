@@ -1,5 +1,12 @@
 # Ícone do MetTracker
 
+> **Em uso desde 17/09/2026:** `ios/SalesTracker/SalesTracker.icon`, feito pelo Berto no
+> Icon Composer — funil com seta, duas camadas com Liquid Glass, gradiente próprio e
+> variante escura. O `project.yml` aponta lá com `ASSETCATALOG_COMPILER_APPICON_NAME`.
+>
+> O que está em baixo foi a proposta anterior, em camadas vetoriais. Fica como alternativa
+> e como registo de como se monta um ícone em camadas; não é o que a app usa.
+
 Conceito: o **funil**. Quatro formas que estreitam, a última destacada do resto —
 o contrato que sai. Sem texto, sem letras, sem réplicas de interface, como manda a HIG.
 

@@ -25,7 +25,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bertobarata.salestracker
-        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # O ícone é um pacote .icon do Icon Composer, em camadas e com Liquid Glass.
+        # O nome é o do ficheiro sem extensão.
+        ASSETCATALOG_COMPILER_APPICON_NAME: SalesTracker
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         # Só iPhone. Suportar iPad obrigaria às quatro orientações para multitarefa
         # e a um conjunto próprio de capturas de ecrã na loja.
