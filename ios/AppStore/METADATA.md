@@ -103,8 +103,8 @@ Isto produz a etiqueta **"Data Not Collected"** e dispensa todo o resto do quest
 Não é necessária conta nem credenciais: a aplicação abre diretamente no registo do dia.
 
 A base de dados começa vazia. Para ver os ecrãs com conteúdo, basta escrever números no
-separador "Hoje" e tocar em Guardar — os separadores Semana, Relatório e Tendências passam
-a mostrar dados imediatamente.
+separador "Hoje" — gravam-se sozinhos, não há botão de guardar — e os separadores Semana,
+Relatório e Tendências passam a mostrar dados imediatamente.
 
 A aplicação não tem servidor próprio. Os dados são guardados localmente com SwiftData e
 sincronizados através do CloudKit, na base de dados privada do utilizador. O programador não
@@ -113,10 +113,11 @@ terceiros e não há conta para eliminar dentro da aplicação — as guidelines
 5.1.1(v) não se aplicam.
 
 Sobre a Guideline 4.2: a aplicação não é um invólucro de um site nem uma lista de ligações.
-Implementa registo estruturado de nove métricas de atividade, agregação semanal com objetivos
-configuráveis, geração de relatório em texto, exportação CSV, gráficos de tendência até 26
-semanas, dois widgets, um control do Centro de Controlo, App Intents para a Siri e notificações
-locais condicionadas aos dias por preencher.
+Implementa registo estruturado de nove métricas de atividade, tarefas diárias definidas pelo
+utilizador, agregação semanal e mensal com objetivos configuráveis e dia de fecho do mês
+configurável, geração de relatório em texto, exportação CSV, gráficos de tendência até seis
+meses, dois widgets, um control do Centro de Controlo, App Intents para a Siri e dois lembretes
+diários condicionados aos dias por preencher.
 
 Idioma da interface: português de Portugal.
 ```
