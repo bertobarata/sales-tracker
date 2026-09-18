@@ -78,14 +78,18 @@ struct TrendsView: View {
         }
     }
 
-    private var hasData: Bool {
-        buckets.contains { bucket in
+    private func hasData(_ items: [Bucket]) -> Bool {
+        items.contains { bucket in
             Metric.allCases.contains { bucket.totals[$0] > 0 } || bucket.valor > 0
         }
     }
 
     var body: some View {
-        NavigationStack {
+        // Calculado uma vez por desenho. Como propriedade, cada secção voltava a filtrar
+        // todos os registos — quatro varrimentos completos por cada redesenho da vista.
+        let items = buckets
+
+        return NavigationStack {
             List {
                 Section {
                     Picker("Período", selection: $period) {
@@ -100,10 +104,10 @@ struct TrendsView: View {
                          : "Cada barra é uma semana.")
                 }
 
-                if hasData {
-                    meetingsSection
-                    prospectingSection
-                    valueSection
+                if hasData(items) {
+                    meetingsSection(items)
+                    prospectingSection(items)
+                    valueSection(items)
                 } else {
                     Section {
                         ContentUnavailableView(
@@ -120,10 +124,10 @@ struct TrendsView: View {
         }
     }
 
-    private var meetingsSection: some View {
+    private func meetingsSection(_ items: [Bucket]) -> some View {
         Section("Reuniões realizadas") {
             Chart {
-                ForEach(buckets) { bucket in
+                ForEach(items) { bucket in
                     ForEach(meetingMetrics, id: \.self) { metric in
                         BarMark(
                             x: .value("Período", bucket.label),
@@ -138,10 +142,10 @@ struct TrendsView: View {
         }
     }
 
-    private var prospectingSection: some View {
+    private func prospectingSection(_ items: [Bucket]) -> some View {
         Section("Contactos e prospeção") {
             Chart {
-                ForEach(buckets) { bucket in
+                ForEach(items) { bucket in
                     ForEach(prospectingMetrics, id: \.self) { metric in
                         LineMark(
                             x: .value("Período", bucket.label),
@@ -156,10 +160,10 @@ struct TrendsView: View {
         }
     }
 
-    private var valueSection: some View {
+    private func valueSection(_ items: [Bucket]) -> some View {
         Section {
             Chart {
-                ForEach(buckets) { bucket in
+                ForEach(items) { bucket in
                     BarMark(
                         x: .value("Período", bucket.label),
                         y: .value("Valor", bucket.valor)

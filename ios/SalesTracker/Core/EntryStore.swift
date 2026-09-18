@@ -61,6 +61,21 @@ struct EntryStore {
         return true
     }
 
+    /// Os dias já registados entre duas datas, numa só consulta.
+    ///
+    /// O agendamento dos lembretes precisa disto para catorze dias. Perguntar dia a dia
+    /// dava catorze consultas seguidas na thread principal, cada uma com a deduplicação
+    /// por cima — e isso acontecia a cada regresso à app.
+    func filledDayKeys(from start: Date, through end: Date) -> Set<String> {
+        let first = WeekMath.startOfDay(start)
+        let last = WeekMath.startOfDay(end)
+        let descriptor = FetchDescriptor<DailyEntry>(
+            predicate: #Predicate { $0.date >= first && $0.date <= last }
+        )
+        let matches = (try? context.fetch(descriptor)) ?? []
+        return Set(matches.filter { !$0.isEmpty }.map(\.dayKey))
+    }
+
     func entries(in week: Week) -> [DailyEntry] {
         let start = week.start
         let end = week.end

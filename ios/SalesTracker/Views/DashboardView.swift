@@ -39,7 +39,11 @@ struct DashboardView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        // Uma vez por desenho: `totals` filtra e soma todos os registos, e a vista lia-a
+        // treze vezes — nas barras de objetivo e em cada cartão.
+        let totals = self.totals
+
+        return NavigationStack {
             List {
                 Section {
                     WeekNavigator(offset: $weekOffset, week: week)

@@ -72,12 +72,11 @@ enum ReminderScheduler {
     static func refresh(using context: ModelContext) async {
         let store = EntryStore(context)
         let horizon = WeekMath.week(offsetBy: 0).days + WeekMath.week(offsetBy: 1).days
-        let filled = Set(
-            horizon
-                .compactMap { store.entry(for: $0) }
-                .filter { !$0.isEmpty }
-                .map(\.dayKey)
-        )
+        guard let first = horizon.first, let last = horizon.last else { return }
+
+        // Uma consulta para as duas semanas. O resto do trabalho — falar com o centro de
+        // notificações — já corre fora da thread principal.
+        let filled = store.filledDayKeys(from: first, through: last)
         await reschedule(settings: .current, filledDayKeys: filled)
     }
 
