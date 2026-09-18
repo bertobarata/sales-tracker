@@ -43,6 +43,9 @@ targets:
         # MARKETING_VERSION ou CURRENT_PROJECT_VERSION não muda nada.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Declara que a app só usa a encriptação do sistema (HTTPS e o que o iOS faz
+        # por baixo). Sem isto, o App Store Connect volta a perguntar a cada envio.
+        ITSAppUsesNonExemptEncryption: false
         CFBundleDevelopmentRegion: pt-PT
         CFBundleLocalizations:
           - pt-PT
