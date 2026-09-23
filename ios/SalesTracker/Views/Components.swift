@@ -19,6 +19,9 @@ struct WeekNavigator: View {
                         .font(.title3.weight(.semibold))
                 }
                 .buttonStyle(.plain)
+                // Sem isto o VoiceOver anuncia só "chevron.left".
+                .accessibilityLabel("Semana anterior")
+                .accessibilityIdentifier("week.previous")
 
                 Spacer()
 
@@ -40,6 +43,8 @@ struct WeekNavigator: View {
                         .font(.title3.weight(.semibold))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Semana seguinte")
+                .accessibilityIdentifier("week.next")
                 .disabled(isCurrentWeek)
                 .opacity(isCurrentWeek ? 0.2 : 1)
             }

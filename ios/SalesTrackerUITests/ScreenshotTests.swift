@@ -28,6 +28,14 @@ final class ScreenshotTests: XCTestCase {
                 "Ecrã \(tab) não renderizou"
             )
 
+            // O relatório da semana em curso está meio vazio — os contratos e o valor só
+            // se escrevem no fim. Recua uma semana para a captura mostrar uma semana
+            // fechada, que é o que a secção serve para fazer.
+            if tab == "Relatório" {
+                let previous = app.buttons["week.previous"]
+                if previous.waitForExistence(timeout: 5) { previous.tap() }
+            }
+
             // Dá tempo aos gráficos de Tendências para desenharem antes do disparo.
             Thread.sleep(forTimeInterval: 1.5)
             capture(named: String(format: "%02d-%@", index + 2, slug(tab)))
