@@ -1,0 +1,90 @@
+{
+  "fill-specializations" : [
+    {
+      "value" : {
+        "linear-gradient" : [
+          "srgb:0.35778,0.82484,1.00000,1.00000",
+          "srgb:0.00000,0.34177,0.64689,1.00000"
+        ]
+      }
+    },
+    {
+      "appearance" : "dark",
+      "value" : {
+        "linear-gradient" : [
+          "extended-gray:0.00000,1.00000",
+          "srgb:0.00000,0.34177,0.64689,1.00000"
+        ],
+        "orientation" : {
+          "start" : {
+            "x" : 0.5,
+            "y" : 1
+          },
+          "stop" : {
+            "x" : 0.5,
+            "y" : 0
+          }
+        }
+      }
+    }
+  ],
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "ChatGPT Image Sep 17, 2026, 05_28_29 PM.png",
+          "name" : "ChatGPT Image Sep 17, 2026, 05_28_29 PM",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.3,
+            "translation-in-points" : [
+              178.95000000000005,
+              175
+            ]
+          }
+        },
+        {
+          "blend-mode" : "normal",
+          "glass-specializations" : [
+            {
+              "value" : true
+            },
+            {
+              "idiom" : "square",
+              "value" : true
+            }
+          ],
+          "image-name" : "ChatGPT Image Sep 17, 2026, 05_23_47 PM.png",
+          "name" : "ChatGPT Image Sep 17, 2026, 05_23_47 PM",
+          "opacity-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : 0.8
+            }
+          ],
+          "position" : {
+            "scale" : 0.55,
+            "translation-in-points" : [
+              5.5,
+              -1.375
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
