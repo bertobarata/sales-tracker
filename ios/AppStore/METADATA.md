@@ -99,28 +99,41 @@ Isto produz a etiqueta **"Data Not Collected"** e dispensa todo o resto do quest
 
 ## Notas para a equipa de revisão (App Review Information)
 
+Em inglês de propósito: a interface é portuguesa e isso está declarado, mas o argumento
+contra a Guideline 4.2 não pode depender de tradução automática para ser entendido.
+
 ```
-Não é necessária conta nem credenciais: a aplicação abre diretamente no registo do dia.
+HOW TO TEST
 
-A base de dados começa vazia. Para ver os ecrãs com conteúdo, basta escrever números no
-separador "Hoje" — gravam-se sozinhos, não há botão de guardar — e os separadores Semana,
-Relatório e Tendências passam a mostrar dados imediatamente.
+No account or credentials are required. The app opens straight into the daily entry screen.
 
-A aplicação não tem servidor próprio. Os dados são guardados localmente com SwiftData e
-sincronizados através do CloudKit, na base de dados privada do utilizador. O programador não
-tem acesso a esses dados. Por isso não existe início de sessão, não é oferecido login de
-terceiros e não há conta para eliminar dentro da aplicação — as guidelines 4.8, 5.1.1 e
-5.1.1(v) não se aplicam.
+The database starts empty. To see the app with content, type numbers on the "Hoje" (Today) tab — entries save themselves, there is no save button — then open "Semana" (Week), "Relatório" (Report) and "Tendências" (Trends), which fill in immediately.
 
-Sobre a Guideline 4.2: a aplicação não é um invólucro de um site nem uma lista de ligações.
-Implementa registo estruturado de nove métricas de atividade, tarefas diárias definidas pelo
-utilizador, agregação semanal e mensal com objetivos configuráveis e dia de fecho do mês
-configurável, geração de relatório em texto, exportação CSV, gráficos de tendência até seis
-meses, dois widgets, um control do Centro de Controlo, App Intents para a Siri e dois lembretes
-diários condicionados aos dias por preencher.
+On first launch a short onboarding explains the sales funnel the app tracks. Its fifth page offers to enable two daily reminders; accepting shows the standard iOS notification permission prompt. Declining is fine and the app works the same.
 
-Idioma da interface: português de Portugal.
+The widget and Control Center control can be added from the Home Screen and Control Center as usual. Siri shortcuts appear under the app in the Shortcuts app.
+
+WHAT THIS APP IS
+
+A daily activity tracker for salespeople who work to targets. It records nine activity metrics per day, aggregates them by week and by a configurable monthly closing period, generates a weekly text report, exports CSV, and charts trends over one, three or six months.
+
+It is free, has no in-app purchases, no advertising and no analytics. iPhone only, by design.
+
+DATA AND PRIVACY
+
+There is no server. Data is stored locally with SwiftData and synced through CloudKit to the user's own private iCloud database. The developer has no access to it and receives no copy. This is why the app has no sign-in, offers no third-party login, and has no in-app account deletion — guidelines 4.8, 5.1.1 and 5.1.1(v) do not apply. The App Privacy answer is "Data Not Collected" for the same reason.
+
+ON GUIDELINE 4.2
+
+This is not a web wrapper or a list of links. It implements structured daily entry of nine metrics, user-defined daily checklist items, weekly and monthly aggregation against configurable targets, a configurable month-closing day, weekly report generation, CSV export, trend charts, two widgets, a Control Center control, App Intents for Siri, and two daily local notifications that are skipped on days already recorded.
+
+Interface language: Portuguese (Portugal).
 ```
+
+**Não pôr roadmap aqui.** Estas notas são lidas por quem decide sobre *esta* build. Anunciar
+contas, iPad ou importação futura só levanta perguntas sobre o que a versão atual faz ou
+deixa de fazer — e a 4.2 é precisamente o risco que não se quer acordar. O roadmap vive no
+`LANCAMENTO.md` e na memória do projeto.
 
 ## Capturas de ecrã
 
