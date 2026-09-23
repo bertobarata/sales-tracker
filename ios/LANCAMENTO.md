@@ -209,3 +209,22 @@ que não existe no simulador.
 **Os testes de UI precisam de estado determinado.** Com gravação automática, o que uma
 execução escreve fica no simulador e falseia a seguinte. Daí `--empty-store`,
 `--skip-onboarding` e `--reset-onboarding`, todos dentro de `#if DEBUG`.
+
+
+## iPad — adiado por decisão, não por esquecimento
+
+`TARGETED_DEVICE_FAMILY = 1`. A app instala em iPad em modo de compatibilidade, numa janela
+ao centro com barras dos lados.
+
+Decisão de 2026-09-23: **publicar só iPhone.** O iPad fica para uma versão futura, feita a
+sério, e custa três coisas:
+
+1. **As quatro orientações** no `UISupportedInterfaceOrientations` — a multitarefa do iPad
+   exige-as. Foi por não declarar orientações nenhumas que a build 1 foi recusada
+2. **Um conjunto próprio de capturas** (13" e 11"). As do iPhone não servem, e capturar a
+   app em modo de compatibilidade dá imagens com barras que lêem como app mal feita
+3. **Rever cada ecrã em largura de iPad** — listas e grelhas desenhadas para 390 pt ficam
+   com medida de leitura impossível a 1024
+
+Enquanto for iPhone-only, o separador de iPad no App Store Connect fica vazio e a Apple não
+o exige.
