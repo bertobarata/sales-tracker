@@ -1,4 +1,4 @@
-# MetTracker (iOS) — estado e runbook de lançamento
+# Meet Tracker (iOS) — estado e runbook de lançamento
 
 App nativa SwiftUI + SwiftData + CloudKit. Vive neste repo ao lado da PWA React
 para que divergências na lógica partilhada (semana ISO, formato do relatório)
@@ -15,7 +15,7 @@ apareçam no mesmo diff.
 | Widget | `com.bertobarata.salestracker.widget` |
 | App Group | `group.com.bertobarata.salestracker` |
 | Assinatura | ✅ archive e export de App Store a passar, equipa `7ACX25JD5D` |
-| Nome na loja | MetTracker (ver aviso em `AppStore/METADATA.md`) |
+| Nome na loja | Meet Tracker, `MeetTracker` por baixo do ícone (build 5; ver `AppStore/METADATA.md`) |
 | Ícone | ✅ funil, `Assets.xcassets`, 1024×1024 sem alfa; camadas para Liquid Glass em `AppStore/icon/` |
 | Capturas | ✅ quatro, 6.9" (1320×2868), em `AppStore/screenshots/` |
 | Metadados | ✅ `AppStore/METADATA.md` |
@@ -107,8 +107,11 @@ usa CloudKit, a PWA fica no Firestore. São duas ilhas de dados.
       genéricas de atividade comercial (nada preso à Metlife), widgets e atalhos.
       Não voltar a introduzir nada específico de um empregador. As notas para a
       equipa de revisão em `AppStore/METADATA.md` respondem a esta guideline de frente.
-- [ ] **Guideline 5.2.1** — "MetTracker" pode ser lido como ligação à MetLife.
-      Se a Apple travar, muda-se o campo do nome; o bundle ID não muda.
+- [x] **Guideline 5.2.1** — resolvido a 2026-09-24: renomeado para **Meet Tracker**
+      (`MeetTracker` por baixo do ícone). "Met" podia ser lido como ligação à MetLife.
+      A Apple não invocou a 5.2.1, mas o ponto 6 da rejeição 2.1 pergunta por autorização
+      para material de terceiros — responder-lhe com o nome antigo era convidar a pergunta
+      seguinte. Bundle ID, App Group e contentor CloudKit **não mudaram**.
 - [x] Política de privacidade num URL público —
       `https://baratastudio.com/mettracker-privacidade.html`
       (repo `bertobarata-website`, branch `feat/mettracker-legal`, **por juntar**)
@@ -120,6 +123,19 @@ usa CloudKit, a PWA fica no Firestore. São duas ilhas de dados.
 Guidelines 4.8 (Sign in with Apple), 5.1.1 (login forçado) e 5.1.1(v) (apagar conta)
 **não se aplicam** — a app não tem contas nem login de terceiros. Foi essa a razão
 principal para escolher CloudKit em vez de Firebase.
+
+### Histórico de submissões
+
+- **1.0 (1)** — rejeitada na validação, antes da revisão: `Invalid bundle. No orientations
+  were specified`. Causa na secção do `INFOPLIST_KEY_*`, mais abaixo.
+- **1.0.0 (4)** — submetida a 2026-09-23, rejeitada a 2026-09-24 sob **Guideline 2.1
+  Information Needed**. É a carta padrão para contas com histórico de revisão limitado:
+  pede seis blocos de informação e uma gravação de ecrã em dispositivo físico. Não apontou
+  nenhum defeito na app. A resposta completa vive em `AppStore/METADATA.md`, no bloco das
+  notas para a equipa de revisão.
+- **1.0.0 (5)** — mesma versão, nome novo (Meet Tracker). É esta que vai no vídeo e na
+  resubmissão. Ordem: build enviada → vídeo gravado com ela pelo TestFlight → metadados
+  atualizados → resposta escrita no App Review → resubmeter.
 
 ### Ainda por construir
 - [x] Assets.xcassets com ícone e AccentColor
@@ -145,10 +161,10 @@ cd ios
 
 xcodebuild archive -project SalesTracker.xcodeproj -scheme SalesTracker \
   -destination 'generic/platform=iOS' \
-  -archivePath /tmp/MetTracker.xcarchive -allowProvisioningUpdates
+  -archivePath /tmp/MeetTracker.xcarchive -allowProvisioningUpdates
 
-xcodebuild -exportArchive -archivePath /tmp/MetTracker.xcarchive \
-  -exportPath /tmp/MetTracker-export \
+xcodebuild -exportArchive -archivePath /tmp/MeetTracker.xcarchive \
+  -exportPath /tmp/MeetTracker-export \
   -exportOptionsPlist AppStore/ExportOptions.plist -allowProvisioningUpdates
 ```
 

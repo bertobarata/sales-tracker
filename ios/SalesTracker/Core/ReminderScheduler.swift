@@ -47,7 +47,7 @@ enum ReminderScheduler {
                 else { continue }
 
                 let content = UNMutableNotificationContent()
-                content.title = "MetTracker"
+                content.title = "Meet Tracker"
                 content.body = time.moment.body
                 content.sound = .default
 
