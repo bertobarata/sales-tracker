@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { getSettings, saveSettings } from '../utils/settings';
+import Sheet from './Sheet';
+import { IconClose } from './Icons';
 
 const SETTING_FIELDS = [
   { key: 'goalPrimeirasReunioesRealizadas', label: '1as Reuniões (objetivo semanal)', min: 1 },
@@ -26,34 +28,39 @@ export default function Settings({ onClose }) {
   }
 
   return (
-    <div className="settings-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="settings-sheet">
-        <div className="settings-header">
-          <h2>Configurações</h2>
-          <button className="settings-close" onClick={onClose}>✕</button>
-        </div>
+    <Sheet title="Configurações" onClose={onClose}>
+      <button
+        type="button"
+        className="sheet-close"
+        aria-label="Fechar configurações"
+        onClick={onClose}
+      >
+        <IconClose />
+      </button>
 
-        <p className="section-label">Objetivos</p>
+      <p className="section-label">Objetivos</p>
         <div className="stepper-list">
           {SETTING_FIELDS.map(f => {
             const step = f.step || 1;
             return (
               <div key={f.key} className="stepper-row">
-                <span className="stepper-label">{f.label}</span>
+                <span className="stepper-label" id={`set-${f.key}`}>{f.label}</span>
                 <div className="stepper-control">
                   <button
                     type="button"
                     className="stepper-btn"
+                    aria-label={`Diminuir ${f.label}`}
                     onClick={() => adjust(f.key, -1, step)}
-                  >−</button>
-                  <span className="stepper-value" style={{ cursor: 'default' }}>
+                  ><span aria-hidden="true">−</span></button>
+                  <output className="stepper-value stepper-readonly">
                     {values[f.key]}
-                  </span>
+                  </output>
                   <button
                     type="button"
                     className="stepper-btn"
+                    aria-label={`Aumentar ${f.label}`}
                     onClick={() => adjust(f.key, 1, step)}
-                  >+</button>
+                  ><span aria-hidden="true">+</span></button>
                 </div>
               </div>
             );
@@ -63,8 +70,9 @@ export default function Settings({ onClose }) {
         <p className="section-label" style={{ marginTop: 16 }}>Lembretes</p>
         <div className="stepper-list">
           <div className="stepper-row">
-            <span className="stepper-label">Hora do lembrete</span>
+            <label className="stepper-label" htmlFor="reminder-time">Hora do lembrete</label>
             <input
+              id="reminder-time"
               type="time"
               className="time-input"
               value={values.reminderTime || '18:30'}
@@ -73,10 +81,10 @@ export default function Settings({ onClose }) {
           </div>
         </div>
 
-        <button className="btn-primary" style={{ marginTop: 20 }} onClick={handleSave}>
-          {saved ? 'Guardado!' : 'Guardar'}
-        </button>
-      </div>
-    </div>
+      <button type="button" className="btn-primary sheet-action" onClick={handleSave}>
+        {saved ? 'Guardado' : 'Guardar'}
+      </button>
+      <p className="visually-hidden" role="status">{saved ? 'Configurações guardadas' : ''}</p>
+    </Sheet>
   );
 }

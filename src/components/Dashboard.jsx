@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal, formatWeekLabel } from '../utils/storage';
 import { subscribeDailyEntries } from '../utils/sync';
 import { getSettings } from '../utils/settings';
@@ -17,54 +17,76 @@ function getWeekDays(start) {
 }
 
 function GoalBar({ label, value, goal }) {
-  const pct = Math.min(100, Math.round((value / goal) * 100));
+  const pct = goal > 0 ? Math.min(100, Math.round((value / goal) * 100)) : 0;
   const done = value >= goal;
   return (
     <div className="goal-item">
       <div className="goal-header">
         <span className="goal-label">{label}</span>
-        <span className={`goal-count ${done ? 'goal-done' : ''}`}>{value} / {goal}</span>
+        {/* O estado de "atingido" nao pode viver so na cor: vai tambem no texto. */}
+        <span className={`goal-count ${done ? 'goal-done' : ''}`}>
+          {value} / {goal}{done ? ' ✓' : ''}
+        </span>
       </div>
-      <div className="goal-bar">
-        <div className="goal-fill" style={{ width: `${pct}%`, background: done ? 'var(--success)' : 'var(--primary)' }} />
+      <div
+        className={`goal-bar ${done ? 'goal-bar-done' : ''}`}
+        role="progressbar"
+        aria-valuenow={value}
+        aria-valuemin={0}
+        aria-valuemax={goal}
+        aria-label={`${label}: ${value} de ${goal}`}
+      >
+        <div className="goal-fill" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
 }
 
 export default function Dashboard({ uid }) {
-  const [_tick, setTick] = useState(0);
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = last week, etc.
+  // Sobe a cada snapshot do Firestore: e o que invalida tudo o que se le do localStorage.
+  const [version, setVersion] = useState(0);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = semana atual, 1 = anterior, etc.
 
   useEffect(() => {
     const unsub = subscribeDailyEntries(uid, (remote) => {
       loadRemoteEntries(remote);
-      setTick(t => t + 1);
+      setVersion(v => v + 1);
     });
     return unsub;
   }, [uid]);
 
-  const settings = getSettings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` e a chave de invalidacao do localStorage, nao um valor lido aqui dentro
+  const settings = useMemo(() => getSettings(), [version]);
   const GOALS = {
     primeirasReunioesRealizadas: settings.goalPrimeirasReunioesRealizadas,
     segundasReunioesRealizadas: settings.goalSegundasReunioesRealizadas,
   };
   const MONTHLY_VALOR_GOAL = settings.goalMensalValor;
 
-  const offsetDate = new Date();
-  offsetDate.setDate(offsetDate.getDate() - weekOffset * 7);
-  const { start, end } = getWeekDates(offsetDate);
-  const weekDays = getWeekDays(start);
+  const { start, end } = useMemo(() => {
+    const offsetDate = new Date();
+    offsetDate.setDate(offsetDate.getDate() - weekOffset * 7);
+    return getWeekDates(offsetDate);
+  }, [weekOffset]);
 
-  const entries = getEntriesForWeek(start, end);
-  const totals = sumWeekEntries(entries);
+  const weekDays = useMemo(() => getWeekDays(start), [start]);
 
-  const now = new Date();
-  const monthlyValor = getMonthlyValorTotal(now.getFullYear(), now.getMonth() + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` e a chave de invalidacao do localStorage, nao um valor lido aqui dentro
+  const entries = useMemo(() => getEntriesForWeek(start, end), [start, end, version]);
+  const totals = useMemo(() => sumWeekEntries(entries), [entries]);
+
+  const monthlyValor = useMemo(() => {
+    const now = new Date();
+    return getMonthlyValorTotal(now.getFullYear(), now.getMonth() + 1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` e a chave de invalidacao do localStorage, nao um valor lido aqui dentro
+  }, [version]);
   const monthlyValorLeft = Math.max(0, MONTHLY_VALOR_GOAL - monthlyValor);
 
-  const entryByDate = {};
-  entries.forEach(e => { entryByDate[e.date] = e; });
+  const entryByDate = useMemo(() => {
+    const byDate = {};
+    entries.forEach(e => { byDate[e.date] = e; });
+    return byDate;
+  }, [entries]);
 
   const fmt = (d) => d.split('-').reverse().slice(0, 2).join('/');
   const today = new Date().toISOString().split('T')[0];
@@ -76,32 +98,49 @@ export default function Dashboard({ uid }) {
       <div className="card">
         <div className="dashboard-week">
           <div className="week-nav">
-            <button className="week-nav-btn" onClick={() => setWeekOffset(o => o + 1)}>‹</button>
+            <button
+              type="button"
+              className="week-nav-btn"
+              aria-label="Semana anterior"
+              onClick={() => setWeekOffset(o => o + 1)}
+            ><span aria-hidden="true">‹</span></button>
             <div className="week-nav-label">
               {isCurrentWeek ? <h2>Esta Semana</h2> : <h2>{fmt(start)} — {fmt(end)}</h2>}
               <span className="week-range">{formatWeekLabel(start, end)}</span>
             </div>
             <button
+              type="button"
               className="week-nav-btn"
+              aria-label="Semana seguinte"
               onClick={() => setWeekOffset(o => o - 1)}
               disabled={isCurrentWeek}
-              style={{ opacity: isCurrentWeek ? 0.2 : 1 }}
-            >›</button>
+            ><span aria-hidden="true">›</span></button>
           </div>
           {!isCurrentWeek && (
-            <button className="btn-week-current" onClick={() => setWeekOffset(0)}>
+            <button type="button" className="btn-week-current" onClick={() => setWeekOffset(0)}>
               Esta semana →
             </button>
           )}
         </div>
-        <div className="day-strip">
-          {weekDays.map((d, i) => (
-            <div key={d} className={`day-dot ${entryByDate[d] ? 'filled' : ''} ${d === today ? 'day-today' : ''}`}>
-              {DAY_LABELS[i]}
-              <span className="day-num">{entryByDate[d] ? entryByDate[d].contactos ?? '✓' : '—'}</span>
-            </div>
-          ))}
-        </div>
+        <ul className="day-strip">
+          {weekDays.map((d, i) => {
+            const entry = entryByDate[d];
+            const contactos = entry ? entry.contactos ?? 0 : null;
+            return (
+              <li
+                key={d}
+                className={`day-dot ${entry ? 'filled' : ''} ${d === today ? 'day-today' : ''}`}
+                aria-current={d === today ? 'date' : undefined}
+              >
+                <span aria-hidden="true">{DAY_LABELS[i]}</span>
+                <span className="day-num" aria-hidden="true">{entry ? contactos : '—'}</span>
+                <span className="visually-hidden">
+                  {DAY_LABELS[i]}: {entry ? `${contactos} contactos` : 'por registar'}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
       {/* Objetivos semanais */}

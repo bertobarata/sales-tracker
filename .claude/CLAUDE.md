@@ -33,14 +33,20 @@ sales-tracker/
 ├── src/
 │   ├── components/
 │   │   ├── AuthGate.jsx        # Google login/logout, mobile vs desktop OAuth flow
-│   │   ├── DailyInput.jsx      # Step-by-step daily data entry (9 metrics)
+│   │   ├── DailyInput.jsx      # Daily data entry (9 metrics) with day selector
 │   │   ├── Dashboard.jsx       # Weekly overview with goal progress bars
-│   │   ├── NumPad.jsx          # Custom numeric keypad for mobile
+│   │   ├── Icons.jsx           # The whole icon vocabulary, inline SVG
+│   │   ├── NumPad.jsx          # Custom numeric keypad for coarse pointers
+│   │   ├── Settings.jsx        # Editable goals and reminder time
+│   │   ├── Sheet.jsx           # The one overlay pattern: accessible bottom sheet
+│   │   ├── Trends.jsx          # Recharts trends over the last 8 weeks
 │   │   └── WeeklyReport.jsx    # Weekly totals, WhatsApp report, Excel export
 │   ├── utils/
 │   │   ├── storage.js          # localStorage read/write and date helpers
 │   │   ├── sync.js             # Firestore read/write functions
-│   │   └── report.js           # WhatsApp message formatter and Excel export
+│   │   ├── settings.js         # User-configurable goals and reminder time
+│   │   ├── report.js           # WhatsApp message formatter and Excel export
+│   │   └── useCoarsePointer.js # Touch vs mouse, via matchMedia
 │   ├── App.jsx                 # Root component, tab navigation (Daily/Dashboard/Report)
 │   ├── App.css                 # All component styles and CSS variables
 │   ├── index.css               # Global resets and base styles
@@ -64,6 +70,7 @@ npm run dev -- --host  # Expose dev server on local network (for mobile testing)
 npm run build        # Production build to /dist
 npm run preview      # Preview production build locally
 npm run lint         # Run ESLint
+npm test             # Run the Vitest suite
 npm run deploy       # git push origin main && vercel --prod
 ```
 
@@ -115,15 +122,33 @@ match /users/{uid}/{document=**} {
 
 ### Styling
 - All styles live in `src/App.css` (component styles) and `src/index.css` (globals).
-- Use the existing CSS custom properties — do not add inline styles or new style files unless clearly necessary.
-- Key variables: `--primary`, `--bg`, `--surface`, `--text`, `--text-muted`, `--radius`, `--shadow`, `--safe-x`.
-- Dark mode is handled via `@media (prefers-color-scheme: dark)` — the variables are redefined there. Always check both themes when changing styles.
-- The nav bar renders at the **bottom** on mobile and the **top** on desktop (controlled by CSS media query).
+- **`DESIGN.md` at the repo root is the source of truth for the visual system**, and
+  `PRODUCT.md` for who this is for and what it must never look like. Read both before
+  changing anything visual.
+- Colors are OKLCH and every value in `DESIGN.md` was verified by calculation for contrast
+  and sRGB gamut. Do not eyeball a new one: compute it, in both themes.
+- Use the custom properties — no inline styles, no new style files. Key ones: `--primary`,
+  `--bg`, `--surface`, `--raised`, `--border`, `--text`, `--text-muted`, `--radius`,
+  `--safe-x`, `--chart-1`..`--chart-6`.
+- Dark mode redefines the variables under `@media (prefers-color-scheme: dark)`. Check both
+  themes for anything you touch — `--primary` inverts between them, so a surface painted
+  with the accent looks completely different in each.
+- Surfaces are flat: separation is tonal (`--bg` → `--surface` → `--raised`) plus 1px rules.
+  Shadow is only for what genuinely floats. **No card inside a card.**
+- Text never goes below `0.75rem`, and never on top of `--border`.
+- The nav bar renders at the **bottom** on coarse pointers and the **top** otherwise.
 
 ### Components
 - Components are functional React with hooks only — no class components.
-- `DailyInput` uses a step-by-step wizard pattern with a progress bar (index 0–8 for 9 questions).
-- `NumPad` is only rendered on mobile; desktop uses native `<input type="number">`. The detection is done via a CSS media query class toggle or window width check inside the component.
+- `DailyInput` shows all nine metrics at once as a stepper list, with a week strip to pick
+  the day. It was a one-question-per-screen wizard once; it is not any more.
+- `NumPad` renders only for coarse pointers; mouse users get a native `<input type="number">`.
+  Ask `useCoarsePointer()` (`src/utils/useCoarsePointer.js`), which wraps
+  `matchMedia('(pointer: coarse)')` and reacts to changes. Never sniff the user agent.
+- `Sheet` is the only overlay pattern. It handles the dialog role, focus trap, Escape,
+  focus restore and scroll lock. Anything that floats over the page goes through it.
+- Every interactive element needs an accessible name, a visible `:focus-visible` ring and a
+  44px touch target. Icons are inline SVG from `Icons.jsx` — never emoji.
 - `WeeklyReport` computes weekly totals from daily entries and renders editable extra fields before export.
 
 ### Firebase
@@ -144,20 +169,23 @@ match /users/{uid}/{document=**} {
 
 ## Goals Configuration
 
-Weekly goal thresholds are hardcoded in `src/components/Dashboard.jsx`. To change them, update the constants near the top of that file:
+Goals are **user-configurable at runtime**, not hardcoded. They live in localStorage and are
+read through `src/utils/settings.js`; the user edits them in the Settings sheet
+(`src/components/Settings.jsx`). Defaults are the fallbacks in `settings.js`.
 
-```js
-const GOALS = {
-  primeirasReunioes: 10,   // target for 1st meetings
-  segundasReunioes: 8,     // target for 2nd meetings
-};
-```
+Anything that needs a goal calls `getSettings()` — never a local constant. `Trends.jsx` used
+to hardcode its own monthly target and drew a goal line that ignored what the user had set.
 
 ---
 
-## No Tests
+## Tests
 
-There is no testing framework configured. Do not add test infrastructure unless explicitly requested.
+Vitest, run with `npm test`. Three suites, 41 tests, all pure logic — week arithmetic and
+date keys (`storage.test.js`), the WhatsApp report format (`report.test.js`), and settings
+defaults (`settings.test.js`). No component or DOM tests.
+
+The report format test compares the full output string on purpose: whoever changes the
+wording breaks it deliberately, not by accident.
 
 ---
 
