@@ -142,7 +142,7 @@ export default function WeeklyReport({ uid }) {
       <div className="extra-fields">
         <h3>Esta semana</h3>
         {isTouch ? (
-          <div className="field-row three">
+          <div className="field-row fluid">
             {['contratosFechados', 'valorTotalFechos', 'pessoasSeguras'].map(key => {
               const f = EXTRA_FIELDS.find(f => f.key === key);
               return (
@@ -160,7 +160,7 @@ export default function WeeklyReport({ uid }) {
             })}
           </div>
         ) : (
-          <div className="field-row three">
+          <div className="field-row fluid">
             <div className="field-group">
               <label htmlFor="f-contratos">Contratos fechados</label>
               <input id="f-contratos" type="number" min="0" value={extra.contratosFechados} onChange={e => setField('contratosFechados', e.target.value)} placeholder="0" />

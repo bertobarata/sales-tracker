@@ -1,14 +1,30 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
 import AuthGate from './components/AuthGate';
 import DailyInput from './components/DailyInput';
 import Dashboard from './components/Dashboard';
 import WeeklyReport from './components/WeeklyReport';
-import Trends from './components/Trends';
 import Settings from './components/Settings';
 import { getDailyEntry } from './utils/storage';
 import { getSettings } from './utils/settings';
+
+// O recharts é a maior fatia do pacote e só serve este separador, que é o menos
+// aberto. Carregado aqui, saía no arranque de quem só quer escrever os números do dia.
+const Trends = lazy(() => import('./components/Trends'));
+
+function TrendsSkeleton() {
+  return (
+    <div aria-hidden="true">
+      {[0, 1, 2].map(i => (
+        <div key={i} className="card">
+          <div className="skeleton skeleton-label" />
+          <div className="skeleton skeleton-chart" />
+        </div>
+      ))}
+    </div>
+  );
+}
 import { useCoarsePointer } from './utils/useCoarsePointer';
 import { IconToday, IconWeek, IconReport, IconTrends, IconSettings } from './components/Icons';
 import './App.css';
@@ -121,6 +137,7 @@ export default function App() {
     <AuthGate>
       {(user) => (
         <div className="app">
+          <a className="skip-link" href="#tabpanel">Saltar para o conteúdo</a>
           <header className="app-header">
             <span className="app-user">{user.displayName}</span>
             <h1>Sales Tracker</h1>
@@ -154,7 +171,11 @@ export default function App() {
             {tab === 'hoje' && <DailyInput uid={user.uid} />}
             {tab === 'semana' && <Dashboard uid={user.uid} />}
             {tab === 'relatorio' && <WeeklyReport uid={user.uid} />}
-            {tab === 'tendencias' && <Trends uid={user.uid} />}
+            {tab === 'tendencias' && (
+              <Suspense fallback={<TrendsSkeleton />}>
+                <Trends uid={user.uid} />
+              </Suspense>
+            )}
           </main>
 
           {isTouch && <TabBar tab={tab} setTab={setTab} className="tab-bar tab-bar-bottom" />}
