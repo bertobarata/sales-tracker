@@ -133,8 +133,13 @@ principal para escolher CloudKit em vez de Firebase.
   pede seis blocos de informação e uma gravação de ecrã em dispositivo físico. Não apontou
   nenhum defeito na app. A resposta completa vive em `AppStore/METADATA.md`, no bloco das
   notas para a equipa de revisão.
-- **1.0.0 (5)** — mesma versão, nome novo (Meet Tracker). É esta que vai no vídeo e na
-  resubmissão. Ordem: build enviada → vídeo gravado com ela pelo TestFlight → metadados
+- **1.0.0 (5)** — mesma versão, nome novo (Meet Tracker). Substituída antes de submeter.
+- **1.0.0 (6)** — tira "Enviar ao seu manager" do ecrã Relatório, que era a ação principal
+  e aparecia no vídeo de revisão. A palavra presumia uma hierarquia que a app não tem,
+  contradizia a resposta que enviámos à Apple ("not tied to any company, employer or
+  business model") e a regra deste ficheiro de não introduzir nada específico de um
+  empregador — e era falsa para o público real, que são trabalhadores independentes. Ficou
+  `Enviar relatório`. É esta build que vai no vídeo e na resubmissão. Ordem: build enviada → vídeo gravado com ela pelo TestFlight → metadados
   atualizados → resposta escrita no App Review → resubmeter.
 
 ### Ainda por construir
@@ -161,10 +166,10 @@ cd ios
 
 xcodebuild archive -project SalesTracker.xcodeproj -scheme SalesTracker \
   -destination 'generic/platform=iOS' \
-  -archivePath /tmp/MeetTracker.xcarchive -allowProvisioningUpdates
+  -archivePath /tmp/MeetTracker6.xcarchive -allowProvisioningUpdates
 
-xcodebuild -exportArchive -archivePath /tmp/MeetTracker.xcarchive \
-  -exportPath /tmp/MeetTracker-export \
+xcodebuild -exportArchive -archivePath /tmp/MeetTracker6.xcarchive \
+  -exportPath /tmp/MeetTracker6-export \
   -exportOptionsPlist AppStore/ExportOptions.plist -allowProvisioningUpdates
 ```
 
