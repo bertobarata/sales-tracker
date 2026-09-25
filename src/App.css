@@ -262,7 +262,7 @@ body {
   margin: 0 auto;
   align-self: center;
 }
-.app-main:focus { outline: none; }
+#tabpanel:focus { outline: none; }
 
 /* ─── Cards ─── */
 .card {

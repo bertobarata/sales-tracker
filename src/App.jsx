@@ -15,13 +15,17 @@ const Trends = lazy(() => import('./components/Trends'));
 
 function TrendsSkeleton() {
   return (
-    <div aria-hidden="true">
-      {[0, 1, 2].map(i => (
-        <div key={i} className="card">
-          <div className="skeleton skeleton-label" />
-          <div className="skeleton skeleton-chart" />
-        </div>
-      ))}
+    <div role="status">
+      {/* As caixas cinzentas nao dizem nada a quem nao ve. A frase diz. */}
+      <span className="visually-hidden">A carregar os gráficos de tendências</span>
+      <div aria-hidden="true">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="card">
+            <div className="skeleton skeleton-label" />
+            <div className="skeleton skeleton-chart" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -167,15 +171,25 @@ export default function App() {
 
           {!isTouch && <TabBar tab={tab} setTab={setTab} className="tab-bar" />}
 
-          <main className="app-main" id="tabpanel" role="tabpanel" aria-labelledby={`tab-${tab}`} tabIndex={-1}>
-            {tab === 'hoje' && <DailyInput uid={user.uid} />}
-            {tab === 'semana' && <Dashboard uid={user.uid} />}
-            {tab === 'relatorio' && <WeeklyReport uid={user.uid} />}
-            {tab === 'tendencias' && (
-              <Suspense fallback={<TrendsSkeleton />}>
-                <Trends uid={user.uid} />
-              </Suspense>
-            )}
+          {/* O painel e o marco sao elementos diferentes de proposito: um `role`
+              explicito substitui o papel implicito, e `<main role="tabpanel">`
+              fazia a pagina deixar de ter marco principal. */}
+          <main className="app-main">
+            <div
+              id="tabpanel"
+              role="tabpanel"
+              aria-labelledby={`tab-${tab}`}
+              tabIndex={-1}
+            >
+              {tab === 'hoje' && <DailyInput uid={user.uid} />}
+              {tab === 'semana' && <Dashboard uid={user.uid} />}
+              {tab === 'relatorio' && <WeeklyReport uid={user.uid} />}
+              {tab === 'tendencias' && (
+                <Suspense fallback={<TrendsSkeleton />}>
+                  <Trends uid={user.uid} />
+                </Suspense>
+              )}
+            </div>
           </main>
 
           {isTouch && <TabBar tab={tab} setTab={setTab} className="tab-bar tab-bar-bottom" />}

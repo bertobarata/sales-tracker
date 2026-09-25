@@ -28,7 +28,7 @@ export default function NumPad({ value, onChange, onConfirm, confirmLabel }) {
       <div className="numpad-display" role="status" aria-live="polite" aria-atomic="true">
         <span className="numpad-value">{value === '' ? '0' : value}</span>
       </div>
-      <div className="numpad-grid">
+      <div className="numpad-grid" role="group" aria-label="Teclado numérico">
         {keys.map(({ k, label, className }) => (
           <button
             key={k}
