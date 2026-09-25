@@ -182,7 +182,13 @@ export default function WeeklyReport({ uid }) {
         {isTouch ? (
           <div className="field-row three">
             {['reunioes1aProxSemana', 'reunioes2aProxSemana', 'reunioes3aProxSemana'].map((key, i) => (
-              <button key={key} type="button" className="field-tap" onClick={() => openNumpad(key)}>
+              <button
+                key={key}
+                type="button"
+                className="field-tap"
+                aria-label={`${i + 1}.ª reunião: ${extra[key] || '0'}. Tocar para escrever.`}
+                onClick={() => openNumpad(key)}
+              >
                 <span className="field-tap-label">{i + 1}.ª</span>
                 <span className="field-tap-value">{extra[key] || '0'}</span>
               </button>
