@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 
 export default function AuthGate({ children }) {
   const [user, setUser] = useState(undefined);
   const [loginError, setLoginError] = useState(null);
+  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
-    // Captura erros que possam ter ocorrido durante o redirect de volta
+    // Só interessa para o caminho de recurso abaixo, quando a janela é bloqueada.
     getRedirectResult(auth).catch((e) => {
       console.error(e);
       setLoginError('Não foi possível iniciar sessão. Tenta novamente.');
@@ -17,9 +18,43 @@ export default function AuthGate({ children }) {
     return unsubscribe;
   }, []);
 
-  function handleLogin() {
+  /**
+   * Janela em vez de redirecionamento.
+   *
+   * O `authDomain` do projeto (`…firebaseapp.com`) é uma origem diferente da da app.
+   * O `signInWithRedirect` guarda o estado pendente no armazenamento dessa origem e
+   * lê-o de volta ao regressar — e os browsers que bloqueiam armazenamento de
+   * terceiros, o Safari sempre e o Chrome cada vez mais, deitam-no fora pelo caminho.
+   * O resultado é voltar da escolha de conta na mesma página de login, sem erro
+   * nenhum: o `getRedirectResult` devolve `null` e ninguém fica a saber porquê.
+   *
+   * A janela não atravessa origens para guardar estado, por isso não sofre disto.
+   * O redirecionamento fica como recurso para quando a janela é bloqueada.
+   */
+  async function handleLogin() {
     setLoginError(null);
-    signInWithRedirect(auth, googleProvider);
+    setSigningIn(true);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (e) {
+      // Desistir de propósito não é erro: fechar a janela ou abrir uma segunda.
+      if (e?.code === 'auth/popup-closed-by-user' || e?.code === 'auth/cancelled-popup-request') {
+        return;
+      }
+      if (e?.code === 'auth/popup-blocked' || e?.code === 'auth/operation-not-supported-in-this-environment') {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirectError) {
+          console.error(redirectError);
+        }
+      } else {
+        console.error(e);
+      }
+      setLoginError('Não foi possível iniciar sessão. Tenta novamente.');
+    } finally {
+      setSigningIn(false);
+    }
   }
 
   if (user === undefined) {
@@ -32,14 +67,20 @@ export default function AuthGate({ children }) {
         <div className="auth-card">
           <h1>Sales Tracker</h1>
           <p>Inicia sessão para sincronizar os teus dados entre dispositivos.</p>
-          <button type="button" className="btn-google" onClick={handleLogin}>
+          <button
+            type="button"
+            className="btn-google"
+            onClick={handleLogin}
+            disabled={signingIn}
+            aria-busy={signingIn}
+          >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
               <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
               <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
             </svg>
-            Entrar com Google
+            {signingIn ? 'A entrar…' : 'Entrar com Google'}
           </button>
           {/* role="alert" para quem falha o login com leitor de ecra ouvir porque. */}
           {loginError && <p className="auth-error" role="alert">{loginError}</p>}
