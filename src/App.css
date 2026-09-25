@@ -659,6 +659,16 @@ body {
 .preview-box { background: var(--raised); border-radius: var(--radius-md); padding: 14px; margin: 10px 0 14px; }
 .preview-box pre { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 0.8125rem; white-space: pre-wrap; color: var(--text); line-height: 1.7; }
 .report-actions { display: flex; flex-direction: column; gap: 8px; }
+.report-error {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in oklch, var(--danger) 35%, transparent);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--danger) 10%, var(--surface));
+  color: var(--danger);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
 
 /* ─── Bottom nav (mobile) ─── */
 .tab-bar-bottom {

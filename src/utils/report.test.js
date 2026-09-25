@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock XLSX antes de importar report.js — evita writes ao sistema de ficheiros
+// Mock XLSX antes de importar report.js — evita writes ao sistema de ficheiros.
+// O report.js importa-o dinamicamente; o vi.mock intercepta os dois caminhos.
 vi.mock('xlsx', () => ({
   default: {
     utils: {
@@ -124,25 +125,25 @@ describe('exportToExcel', () => {
     },
   ];
 
-  it('chama XLSX.writeFile com o nome correto', () => {
-    exportToExcel(summaries);
+  it('chama XLSX.writeFile com o nome correto', async () => {
+    await exportToExcel(summaries);
     expect(XLSX.writeFile).toHaveBeenCalledWith(expect.anything(), 'historico_vendas.xlsx');
   });
 
-  it('cria uma linha por semana', () => {
-    exportToExcel(summaries);
+  it('cria uma linha por semana', async () => {
+    await exportToExcel(summaries);
     const rows = XLSX.utils.json_to_sheet.mock.calls[0][0];
     expect(rows).toHaveLength(2);
   });
 
-  it('cada linha tem a coluna "Semana (início)"', () => {
-    exportToExcel(summaries);
+  it('cada linha tem a coluna "Semana (início)"', async () => {
+    await exportToExcel(summaries);
     const rows = XLSX.utils.json_to_sheet.mock.calls[0][0];
     expect(rows[0]).toHaveProperty('Semana (início)', '2026-04-14');
   });
 
-  it('usa 0 quando extra está em falta', () => {
-    exportToExcel([{ weekStart: '2026-04-14', weekEnd: '2026-04-20', totals: { ...totals }, extra: undefined }]);
+  it('usa 0 quando extra está em falta', async () => {
+    await exportToExcel([{ weekStart: '2026-04-14', weekEnd: '2026-04-20', totals: { ...totals }, extra: undefined }]);
     const rows = XLSX.utils.json_to_sheet.mock.calls[0][0];
     expect(rows[0]['Contratos Fechados']).toBe(0);
     expect(rows[0]['Valor Fechos (€)']).toBe(0);

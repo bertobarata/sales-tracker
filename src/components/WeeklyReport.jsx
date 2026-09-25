@@ -56,6 +56,8 @@ export default function WeeklyReport({ uid }) {
   const [numpadVal, setNumpadVal] = useState('');
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
   const isCurrentWeek = weekOffset === 0;
 
@@ -206,10 +208,23 @@ export default function WeeklyReport({ uid }) {
       <div className="report-actions">
         <button type="button" className="btn-primary" onClick={handleCopy}>{copied ? 'Copiado' : 'Copiar para WhatsApp'}</button>
         <button type="button" className="btn-secondary" onClick={handleSave}>{saved ? 'Guardado' : 'Guardar semana'}</button>
-        <button type="button" className="btn-ghost" onClick={handleExcel}>Exportar Excel</button>
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={handleExcel}
+          disabled={exporting}
+          aria-busy={exporting}
+        >
+          {exporting ? 'A exportar…' : 'Exportar Excel'}
+        </button>
       </div>
+      {exportError && (
+        <p className="report-error" role="alert">
+          Não foi possível exportar. Verifica a ligação e tenta outra vez.
+        </p>
+      )}
       <p className="visually-hidden" role="status">
-        {copied ? 'Relatório copiado' : saved ? 'Semana guardada' : ''}
+        {copied ? 'Relatório copiado' : saved ? 'Semana guardada' : exporting ? 'A exportar' : ''}
       </p>
 
       {activeField !== null && (
@@ -228,5 +243,18 @@ export default function WeeklyReport({ uid }) {
     </div>
   );
 
-  function handleExcel() { exportToExcel(getWeeklySummaries()); }
+  // O modulo do Excel e descarregado no primeiro clique. Offline, esse pedido falha,
+  // e a app e offline-first — por isso o erro tem de ser visivel, nao so na consola.
+  async function handleExcel() {
+    setExporting(true);
+    setExportError(false);
+    try {
+      await exportToExcel(getWeeklySummaries());
+    } catch (e) {
+      console.error(e);
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }
 }
