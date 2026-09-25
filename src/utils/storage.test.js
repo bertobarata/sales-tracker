@@ -10,7 +10,7 @@ import {
   getISOWeekNumber, getWeekDates, formatWeekLabel,
   saveDailyEntry, getDailyEntry, getDailyEntries,
   getEntriesForWeek, sumWeekEntries,
-  saveWeeklySummary, getWeeklySummaries, getMonthlyValorTotal,
+  saveWeeklySummary, getWeeklySummaries, getMonthlyValorTotal, getMonthOfWeek,
   loadRemoteEntries, loadRemoteWeeklySummaries,
 } from './storage';
 
@@ -148,6 +148,28 @@ describe('saveWeeklySummary / getWeeklySummaries', () => {
     const summaries = getWeeklySummaries();
     expect(summaries).toHaveLength(1);
     expect(summaries[0].totals.contactos).toBe(9);
+  });
+});
+
+describe('getMonthOfWeek', () => {
+  it('devolve o ano, o mês e o nome por extenso', () => {
+    expect(getMonthOfWeek('2026-04-20')).toEqual({ year: 2026, month: 4, label: 'Abril' });
+  });
+
+  it('uma semana que atravessa a viragem conta para o mês em que começou', () => {
+    // 29 set a 5 out: o total mensal filtra por weekStart, por isso esta semana é de setembro
+    expect(getMonthOfWeek('2026-09-28')).toMatchObject({ month: 9, label: 'Setembro' });
+  });
+
+  it('acompanha o filtro do getMonthlyValorTotal', () => {
+    saveWeeklySummary({ weekStart: '2026-09-28', weekEnd: '2026-10-04', totals: {}, extra: { valorTotalFechos: 1200 } });
+    const m = getMonthOfWeek('2026-09-28');
+    expect(getMonthlyValorTotal(m.year, m.month)).toBe(1200);
+  });
+
+  it('a viragem do ano não escorrega', () => {
+    expect(getMonthOfWeek('2026-12-28')).toMatchObject({ year: 2026, month: 12, label: 'Dezembro' });
+    expect(getMonthOfWeek('2027-01-04')).toMatchObject({ year: 2027, month: 1, label: 'Janeiro' });
   });
 });
 

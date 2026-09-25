@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal, formatWeekLabel } from '../utils/storage';
+import { getWeekDates, getEntriesForWeek, sumWeekEntries, loadRemoteEntries, getMonthlyValorTotal, formatWeekLabel, getMonthOfWeek } from '../utils/storage';
 import { subscribeDailyEntries } from '../utils/sync';
 import { getSettings } from '../utils/settings';
 
@@ -75,11 +75,15 @@ export default function Dashboard({ uid }) {
   const entries = useMemo(() => getEntriesForWeek(start, end), [start, end, version]);
   const totals = useMemo(() => sumWeekEntries(entries), [entries]);
 
-  const monthlyValor = useMemo(() => {
-    const now = new Date();
-    return getMonthlyValorTotal(now.getFullYear(), now.getMonth() + 1);
+  // O mes segue a semana que se esta a ver. Antes vinha sempre de `new Date()`, por isso
+  // recuar para uma semana de julho deixava este cartao a mostrar o total de setembro,
+  // sem nada no ecra a dizer que aquele numero era de outro mes.
+  const month = useMemo(() => getMonthOfWeek(start), [start]);
+  const monthlyValor = useMemo(
+    () => getMonthlyValorTotal(month.year, month.month),
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` e a chave de invalidacao do localStorage, nao um valor lido aqui dentro
-  }, [version]);
+    [month, version],
+  );
   const monthlyValorLeft = Math.max(0, MONTHLY_VALOR_GOAL - monthlyValor);
 
   const entryByDate = useMemo(() => {
@@ -159,7 +163,7 @@ export default function Dashboard({ uid }) {
       </div>
 
       {/* Objetivo mensal */}
-      <p className="section-label">Objetivo Mensal</p>
+      <p className="section-label">Objetivo Mensal · {month.label}</p>
       <div className="card">
         <GoalBar
           label="Valor fechos"
