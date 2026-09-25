@@ -118,7 +118,10 @@ body {
 .skip-link {
   position: absolute;
   left: 8px;
-  top: -100px;
+  top: 8px;
+  /* Sai de cena por transform, nao por `top`: `top` e propriedade de layout e o
+     DESIGN.md proibe anima-las. */
+  transform: translateY(calc(-100% - 16px));
   z-index: 200;
   background: var(--surface);
   color: var(--text);
@@ -128,9 +131,9 @@ body {
   font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
-  transition: top var(--dur) var(--ease);
+  transition: transform var(--dur) var(--ease);
 }
-.skip-link:focus-visible { top: 8px; }
+.skip-link:focus-visible { transform: translateY(0); }
 
 /* Esqueleto do separador Tendencias enquanto o recharts carrega. */
 .skeleton {

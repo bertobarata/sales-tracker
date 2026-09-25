@@ -8,6 +8,9 @@ import WeeklyReport from './components/WeeklyReport';
 import Settings from './components/Settings';
 import { getDailyEntry } from './utils/storage';
 import { getSettings } from './utils/settings';
+import { useCoarsePointer } from './utils/useCoarsePointer';
+import { IconToday, IconWeek, IconReport, IconTrends, IconSettings } from './components/Icons';
+import './App.css';
 
 // O recharts é a maior fatia do pacote e só serve este separador, que é o menos
 // aberto. Carregado aqui, saía no arranque de quem só quer escrever os números do dia.
@@ -29,9 +32,6 @@ function TrendsSkeleton() {
     </div>
   );
 }
-import { useCoarsePointer } from './utils/useCoarsePointer';
-import { IconToday, IconWeek, IconReport, IconTrends, IconSettings } from './components/Icons';
-import './App.css';
 
 const NOTIF_DISMISSED_KEY = 'salestracker_notif_dismissed';
 
@@ -163,8 +163,8 @@ export default function App() {
             <div className="notif-prompt">
               <span>Ativar lembretes diários?</span>
               <div className="notif-prompt-actions">
-                <button className="notif-btn-yes" onClick={handleEnableNotifications}>Ativar</button>
-                <button className="notif-btn-no" onClick={handleDismissNotifPrompt}>Agora não</button>
+                <button type="button" className="notif-btn-yes" onClick={handleEnableNotifications}>Ativar</button>
+                <button type="button" className="notif-btn-no" onClick={handleDismissNotifPrompt}>Agora não</button>
               </div>
             </div>
           )}
