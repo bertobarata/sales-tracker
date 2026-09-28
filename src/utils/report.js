@@ -1,4 +1,6 @@
-import * as XLSX from 'xlsx';
+// O SheetJS nao e importado no topo de proposito. Pesa mais de 400 kB minificado e
+// so corre quando alguem carrega em "Exportar Excel"; no topo, viajava no arranque
+// de toda a gente. Daqui, sai num chunk proprio, pedido no momento.
 
 export function generateWhatsAppText(totals, extra, weekStart, weekEnd) {
   const fmt = (d) => d.split('-').reverse().join('/');
@@ -18,7 +20,9 @@ export function generateWhatsAppText(totals, extra, weekStart, weekEnd) {
   );
 }
 
-export function exportToExcel(weeklySummaries) {
+export async function exportToExcel(weeklySummaries) {
+  const { utils, writeFile } = await import('xlsx');
+
   const rows = weeklySummaries.map(s => ({
     'Semana (início)': s.weekStart,
     'Semana (fim)': s.weekEnd,
@@ -39,9 +43,9 @@ export function exportToExcel(weeklySummaries) {
     '3ª Próxima Semana': s.extra?.reunioes3aProxSemana || 0,
   }));
 
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Histórico');
+  const ws = utils.json_to_sheet(rows);
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, ws, 'Histórico');
 
   // Column widths
   ws['!cols'] = [
@@ -50,5 +54,5 @@ export function exportToExcel(weeklySummaries) {
     { wch: 13 }, { wch: 18 }, { wch: 17 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 },
   ];
 
-  XLSX.writeFile(wb, 'historico_vendas.xlsx');
+  writeFile(wb, 'historico_vendas.xlsx');
 }

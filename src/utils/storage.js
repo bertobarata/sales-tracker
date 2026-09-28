@@ -59,6 +59,26 @@ export function getISOWeekNumber(date) {
 }
 
 const PT_MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const PT_MONTHS_LONG = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+/**
+ * O mês a que uma semana pertence, para efeitos de total mensal.
+ *
+ * É o mês do **primeiro** dia da semana, e não do último, porque é essa a chave que o
+ * `getMonthlyValorTotal` usa para filtrar (`weekStart`). Uma semana que atravessa a
+ * viragem do mês conta inteira para o mês em que começou — se aqui se usasse o último
+ * dia, a etiqueta diria um mês e a soma seria de outro.
+ *
+ * Repare-se que isto difere de propósito do `formatWeekLabel`, que usa o mês do dia
+ * final porque está a nomear a semana, não a agrupá-la.
+ */
+export function getMonthOfWeek(weekStart) {
+  const d = new Date(weekStart + 'T00:00:00');
+  return { year: d.getFullYear(), month: d.getMonth() + 1, label: PT_MONTHS_LONG[d.getMonth()] };
+}
 
 // Retorna "Semana 17 · 20–26 abr"
 export function formatWeekLabel(weekStart, weekEnd) {

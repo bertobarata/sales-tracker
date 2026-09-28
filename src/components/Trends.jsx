@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
@@ -8,9 +8,9 @@ import {
   loadRemoteWeeklySummaries, loadRemoteEntries,
 } from '../utils/storage';
 import { subscribeDailyEntries, subscribeWeeklySummaries } from '../utils/sync';
+import { getSettings } from '../utils/settings';
 
 const WEEKS_TO_SHOW = 8;
-const MONTHLY_VALOR_GOAL = 5000;
 
 // Build last N weeks of aggregated data
 function buildWeeklyData(n) {
@@ -43,38 +43,54 @@ function buildWeeklyData(n) {
   return weeks;
 }
 
+// Serie categorica definida em App.css, uma so vez para os dois temas.
 const COLORS = {
-  primeiras: '#2563eb',
-  segundas: '#7c3aed',
-  terceiras: '#0891b2',
-  contactos: '#ea580c',
-  valor: '#16a34a',
-  conversao: '#db2777',
+  primeiras: 'var(--chart-1)',
+  segundas: 'var(--chart-6)',
+  terceiras: 'var(--chart-2)',
+  contactos: 'var(--chart-4)',
+  valor: 'var(--chart-3)',
+  conversao: 'var(--chart-5)',
 };
 
+// Sem background explicito o tooltip do recharts fica branco sobre fundo escuro.
 const tooltipStyle = {
-  borderRadius: 8,
+  borderRadius: 10,
   fontSize: '0.8rem',
-  border: '1px solid #e2e8f0',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  color: 'var(--text)',
 };
+const tooltipItemStyle = { color: 'var(--text)' };
+const tooltipLabelStyle = { color: 'var(--text-muted)' };
 
 export default function Trends({ uid }) {
-  const [_tick, setTick] = useState(0);
+  // Sobe a cada snapshot do Firestore. E a unica coisa que invalida os dados,
+  // por isso e a unica dependencia dos memos abaixo.
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     const unsubDaily = subscribeDailyEntries(uid, (remote) => {
       loadRemoteEntries(remote);
-      setTick(t => t + 1);
+      setVersion(v => v + 1);
     });
     const unsubWeekly = subscribeWeeklySummaries(uid, (remote) => {
       loadRemoteWeeklySummaries(remote);
-      setTick(t => t + 1);
+      setVersion(v => v + 1);
     });
     return () => { unsubDaily(); unsubWeekly(); };
   }, [uid]);
 
-  const data = buildWeeklyData(WEEKS_TO_SHOW);
-  const hasData = data.some(w => w.contactos > 0 || w.primeiras > 0 || w.valorFechos > 0);
+  // Sem isto, cada render le e faz JSON.parse do localStorage duas vezes e
+  // reconstroi as oito semanas — inclusive quando so mudou o hover de um grafico.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` e a chave de invalidacao do localStorage, nao um valor lido aqui dentro
+  const monthlyValorGoal = useMemo(() => getSettings().goalMensalValor, [version]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `version` e a chave de invalidacao do localStorage, nao um valor lido aqui dentro
+  const data = useMemo(() => buildWeeklyData(WEEKS_TO_SHOW), [version]);
+  const hasData = useMemo(
+    () => data.some(w => w.contactos > 0 || w.primeiras > 0 || w.valorFechos > 0),
+    [data],
+  );
 
   if (!hasData) {
     return (
@@ -95,7 +111,7 @@ export default function Trends({ uid }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
             <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} allowDecimals={false} />
-            <Tooltip contentStyle={tooltipStyle} />
+            <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
             <Legend iconSize={10} wrapperStyle={{ fontSize: '0.75rem' }} />
             <Bar dataKey="primeiras" name="1as" fill={COLORS.primeiras} radius={[4, 4, 0, 0]} />
             <Bar dataKey="segundas" name="2as" fill={COLORS.segundas} radius={[4, 4, 0, 0]} />
@@ -112,7 +128,7 @@ export default function Trends({ uid }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
             <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} allowDecimals={false} />
-            <Tooltip contentStyle={tooltipStyle} />
+            <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} />
             <Bar dataKey="contactos" name="Contactos" fill={COLORS.contactos} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -132,9 +148,9 @@ export default function Trends({ uid }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
             <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
-            <Tooltip contentStyle={tooltipStyle} formatter={v => `${v.toLocaleString('pt-PT')}€`} />
+            <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} formatter={v => `${v.toLocaleString('pt-PT')}€`} />
             <ReferenceLine
-              y={MONTHLY_VALOR_GOAL}
+              y={monthlyValorGoal}
               stroke={COLORS.valor}
               strokeDasharray="4 3"
               label={{ value: 'Objetivo', position: 'insideTopRight', fontSize: 10, fill: COLORS.valor }}
@@ -160,7 +176,7 @@ export default function Trends({ uid }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
             <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} unit="%" domain={[0, 100]} />
-            <Tooltip contentStyle={tooltipStyle} formatter={v => `${v}%`} />
+            <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipItemStyle} labelStyle={tooltipLabelStyle} formatter={v => `${v}%`} />
             <Line
               type="monotone"
               dataKey="conversao"

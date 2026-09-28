@@ -72,7 +72,10 @@ struct WeeklyReportView: View {
 
                 Section {
                     ShareLink(item: reportText) {
-                        Label("Enviar ao seu manager", systemImage: "paperplane.fill")
+                        // Sem presumir destinatário: a folha de partilha leva o texto
+                        // para onde o utilizador quiser. Dizer "ao seu manager" presumia
+                        // uma hierarquia que a app não tem e que muitos utilizadores não têm.
+                        Label("Enviar relatório", systemImage: "paperplane.fill")
                     }
                     Button {
                         UIPasteboard.general.string = reportText

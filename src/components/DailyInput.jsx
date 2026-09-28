@@ -3,6 +3,9 @@ import { saveDailyEntry, loadRemoteEntries, getWeekDates } from '../utils/storag
 import { subscribeDailyEntries } from '../utils/sync';
 import { getSettings } from '../utils/settings';
 import NumPad from './NumPad';
+import Sheet from './Sheet';
+import { useCoarsePointer } from '../utils/useCoarsePointer';
+import { IconClock } from './Icons';
 
 function isPastReminderTime() {
   const { reminderTime } = getSettings();
@@ -10,8 +13,6 @@ function isPastReminderTime() {
   const now = new Date();
   return now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m);
 }
-
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
@@ -50,6 +51,7 @@ function localDateStr(d) {
 }
 
 export default function DailyInput({ uid }) {
+  const isTouch = useCoarsePointer();
   const today = localDateStr(new Date());
 
   const [weekOffset, setWeekOffset] = useState(0); // 0 = semana atual
@@ -140,19 +142,25 @@ export default function DailyInput({ uid }) {
   const weekNavBlock = (
     <>
       <div className="week-nav">
-        <button className="week-nav-btn" onClick={() => setWeekOffset(o => o + 1)}>‹</button>
+        <button
+          type="button"
+          className="week-nav-btn"
+          aria-label="Semana anterior"
+          onClick={() => setWeekOffset(o => o + 1)}
+        ><span aria-hidden="true">‹</span></button>
         <div className="week-nav-label">
           <span className="week-range">{isCurrentWeek ? 'Esta semana' : fmt(weekStart)}</span>
         </div>
         <button
+          type="button"
           className="week-nav-btn"
+          aria-label="Semana seguinte"
           onClick={() => setWeekOffset(o => o - 1)}
           disabled={isCurrentWeek}
-          style={{ opacity: isCurrentWeek ? 0.2 : 1 }}
-        >›</button>
+        ><span aria-hidden="true">›</span></button>
       </div>
       {!isCurrentWeek && (
-        <button className="btn-hoje" onClick={() => setWeekOffset(0)}>
+        <button type="button" className="btn-hoje" onClick={() => setWeekOffset(0)}>
           Hoje →
         </button>
       )}
@@ -162,13 +170,15 @@ export default function DailyInput({ uid }) {
           return (
             <button
               key={d}
+              type="button"
               className={`day-sel-btn${d === selectedDate ? ' active' : ''}${d === today ? ' today' : ''}${isFuture ? ' future' : ''}`}
               onClick={() => !isFuture && handleDaySelect(d)}
               disabled={isFuture}
-              title={fmt(d)}
+              aria-current={d === selectedDate ? 'date' : undefined}
+              aria-label={`${DAY_LABELS[i]}, ${fmt(d)}${isFuture ? ' (ainda não aconteceu)' : ''}`}
             >
-              {DAY_LABELS[i]}
-              <span className="day-sel-num">{d.split('-')[2]}</span>
+              <span aria-hidden="true">{DAY_LABELS[i]}</span>
+              <span className="day-sel-num" aria-hidden="true">{d.split('-')[2]}</span>
             </button>
           );
         })}
@@ -190,7 +200,7 @@ export default function DailyInput({ uid }) {
             </div>
           ))}
         </div>
-        <button className="btn-secondary" onClick={handleEdit}>Editar</button>
+        <button type="button" className="btn-secondary" onClick={handleEdit}>Editar</button>
       </div>
     );
   }
@@ -198,9 +208,10 @@ export default function DailyInput({ uid }) {
   return (
     <>
       {!done && isToday && isPastReminderTime() && (
-        <div className="reminder-banner">
-          Não te esqueças de registar o teu dia! ⏰
-        </div>
+        <p className="reminder-banner">
+          <IconClock />
+          Ainda não registaste o dia de hoje.
+        </p>
       )}
       <div className="card daily-card">
         {weekNavBlock}
@@ -210,17 +221,19 @@ export default function DailyInput({ uid }) {
         <div className="stepper-list">
           {FIELDS.map(f => (
             <div key={f.key} className="stepper-row">
-              <span className="stepper-label">{f.label}</span>
+              <span className="stepper-label" id={`lbl-${f.key}`}>{f.label}</span>
               <div className="stepper-control">
                 <button
                   type="button"
                   className="stepper-btn"
+                  aria-label={`Menos um: ${f.label}`}
                   onClick={() => adjust(f.key, -1)}
-                >−</button>
-                {isMobile ? (
+                ><span aria-hidden="true">−</span></button>
+                {isTouch ? (
                   <button
                     type="button"
                     className="stepper-value"
+                    aria-label={`${f.label}: ${values[f.key] ?? 0}. Tocar para escrever.`}
                     onClick={() => openNumpad(f.key)}
                   >
                     {values[f.key] ?? 0}
@@ -230,6 +243,7 @@ export default function DailyInput({ uid }) {
                     type="number"
                     min="0"
                     className="stepper-value stepper-input"
+                    aria-labelledby={`lbl-${f.key}`}
                     value={values[f.key] ?? 0}
                     onChange={e => {
                       const val = parseInt(e.target.value, 10);
@@ -240,27 +254,28 @@ export default function DailyInput({ uid }) {
                 <button
                   type="button"
                   className="stepper-btn"
+                  aria-label={`Mais um: ${f.label}`}
                   onClick={() => adjust(f.key, 1)}
-                >+</button>
+                ><span aria-hidden="true">+</span></button>
               </div>
             </div>
           ))}
         </div>
-        <button className="btn-primary" style={{ marginTop: 8 }} onClick={handleSave}>Guardar</button>
+        <button type="button" className="btn-primary card-action" onClick={handleSave}>Guardar</button>
       </div>
 
       {activeField && (
-        <div className="numpad-overlay" onClick={e => { if (e.target === e.currentTarget) closeNumpad(); }}>
-          <div className="numpad-sheet">
-            <p className="numpad-sheet-label">{FIELDS.find(f => f.key === activeField)?.label}</p>
-            <NumPad
-              value={numpadInput}
-              onChange={setNumpadInput}
-              onConfirm={confirmNumpad}
-              confirmLabel="OK"
-            />
-          </div>
-        </div>
+        <Sheet
+          title={FIELDS.find(f => f.key === activeField)?.label}
+          onClose={closeNumpad}
+        >
+          <NumPad
+            value={numpadInput}
+            onChange={setNumpadInput}
+            onConfirm={confirmNumpad}
+            confirmLabel="OK"
+          />
+        </Sheet>
       )}
     </>
   );

@@ -4,8 +4,8 @@
   "description": "Registo diário de atividade comercial",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#2563eb",
+  "background_color": "#f9f6f2",
+  "theme_color": "#fffdfa",
   "orientation": "portrait",
   "icons": [
     {
