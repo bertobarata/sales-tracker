@@ -65,7 +65,7 @@ export default function AuthGate({ children }) {
     return (
       <div className="auth-screen">
         <div className="auth-card">
-          <h1>Sales Tracker</h1>
+          <h1>Meet Tracker</h1>
           <p>Inicia sessão para sincronizar os teus dados entre dispositivos.</p>
           <button
             type="button"

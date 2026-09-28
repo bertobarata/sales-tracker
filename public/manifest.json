@@ -1,6 +1,6 @@
 {
-  "name": "Sales Tracker",
-  "short_name": "Sales",
+  "name": "Meet Tracker",
+  "short_name": "MeetTracker",
   "description": "Registo diário de atividade comercial",
   "start_url": "/",
   "display": "standalone",

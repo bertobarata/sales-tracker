@@ -47,7 +47,7 @@ function scheduleReminderNotification() {
   return setTimeout(() => {
     const today = new Date().toISOString().split('T')[0];
     if (!getDailyEntry(today)) {
-      new Notification('Sales Tracker', {
+      new Notification('Meet Tracker', {
         body: 'Ainda não registaste o teu dia de hoje!',
         icon: '/icons/icon-192.png',
         tag: 'daily-reminder',
@@ -144,7 +144,7 @@ export default function App() {
           <a className="skip-link" href="#tabpanel">Saltar para o conteúdo</a>
           <header className="app-header">
             <span className="app-user">{user.displayName}</span>
-            <h1>Sales Tracker</h1>
+            <h1>Meet Tracker</h1>
             <div className="app-header-actions">
               <button
                 type="button"
