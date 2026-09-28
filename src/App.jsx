@@ -49,7 +49,7 @@ function scheduleReminderNotification() {
     if (!getDailyEntry(today)) {
       new Notification('Meet Tracker', {
         body: 'Ainda não registaste o teu dia de hoje!',
-        icon: '/icons/icon-192.png',
+        icon: '/icon-192.png',
         tag: 'daily-reminder',
       });
     }
