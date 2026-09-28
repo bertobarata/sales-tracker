@@ -209,6 +209,7 @@ body {
   white-space: nowrap;
   text-decoration: underline;
   min-height: 44px;
+  min-width: 44px;
   padding: 0 8px;
 }
 .btn-icon {
@@ -756,7 +757,7 @@ body {
   color: var(--on-primary);
   border: none;
   border-radius: var(--radius-sm);
-  min-height: 40px;
+  min-height: 44px;
   padding: 6px 14px;
   font-size: 0.8rem;
   font-weight: 700;
@@ -767,7 +768,7 @@ body {
   color: var(--text-muted);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  min-height: 40px;
+  min-height: 44px;
   padding: 6px 12px;
   font-size: 0.8rem;
   cursor: pointer;
