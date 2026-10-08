@@ -20,7 +20,7 @@ struct FunnelView: View {
         let settings = self.settings
         let baseline = FunnelBaseline.make(entries: allEntries, summaries: allSummaries, settings: settings)
         let current = FunnelCounts.summing(entries: allEntries, summaries: allSummaries, in: month)
-        let goal = Double(settings.goalMensalValor)
+        let workdays = FunnelCalendar.workdays(in: month)
 
         return NavigationStack {
             List {
@@ -42,8 +42,7 @@ struct FunnelView: View {
                             step: step,
                             unitValue: baseline.valuePerUnit(step),
                             done: Int(current[step]),
-                            needed: baseline.needed(step, forGoal: goal),
-                            conversion: baseline.conversion(into: step)
+                            target: step.monthlyTarget(settings: settings, workdays: workdays)
                         )
                     }
                 } header: {
@@ -62,9 +61,9 @@ struct FunnelView: View {
         case .historico(let months):
             let names = months.map(\.label).joined(separator: ", ")
             let valor = baseline.reference.valor.formatted(.currency(code: "EUR").precision(.fractionLength(0)))
-            return "Preços calculados com os meses de \(names): \(valor) fechados a dividir pela atividade que os produziu. \"Precisas\" é quanto desse passo leva ao objetivo mensal ao mesmo ritmo."
+            return "Cada valor é o que fechaste em \(names) (\(valor)) a dividir pela quantidade desse passo nesses meses. O alvo do mês vem dos teus objetivos: contactos por dia útil e reuniões por semana."
         case .objetivo:
-            return "Ainda não há meses anteriores com valor fechado. Os preços vêm do objetivo mensal repartido pelos objetivos semanais. Contactos e reuniões marcadas ganham preço quando houver um mês fechado."
+            return "Ainda não há meses anteriores com valor fechado, por isso cada valor é o objetivo mensal a dividir pelo alvo do mês. Depois do primeiro mês fechado passa a usar os teus números reais."
         }
     }
 }
@@ -73,12 +72,11 @@ private struct FunnelRow: View {
     let step: FunnelStep
     let unitValue: Double?
     let done: Int
-    let needed: Int?
-    let conversion: Double?
+    let target: Int
 
     private var fraction: Double {
-        guard let needed, needed > 0 else { return 0 }
-        return min(1, Double(done) / Double(needed))
+        guard target > 0 else { return 0 }
+        return min(1, Double(done) / Double(target))
     }
 
     var body: some View {
@@ -89,20 +87,10 @@ private struct FunnelRow: View {
                 Text(unitValue.map(euros) ?? "—")
                     .font(.subheadline.weight(.semibold).monospacedDigit())
             }
-            HStack {
-                if let needed {
-                    Text("\(done) de \(needed) este mês")
-                } else {
-                    Text("\(done) este mês")
-                }
-                Spacer()
-                if let conversion {
-                    Text("conversão \(conversion.formatted(.percent.precision(.fractionLength(0))))")
-                }
-            }
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            if needed != nil {
+            Text("\(done) de \(target) este mês")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            if target > 0 {
                 ProgressView(value: fraction)
                     .tint(fraction >= 1 ? .green : .accentColor)
             }

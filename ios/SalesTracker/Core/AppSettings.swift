@@ -20,6 +20,7 @@ extension UserDefaults {
 }
 
 enum SettingsKey {
+    static let goalContactosDia = "goalContactosDia"
     static let goalPrimeirasReunioes = "goalPrimeirasReunioesRealizadas"
     static let goalSegundasReunioes = "goalSegundasReunioesRealizadas"
     static let goalTerceirasReunioes = "goalTerceirasReunioesRealizadas"
@@ -43,6 +44,8 @@ enum SettingsKey {
 
 /// Snapshot das definições, para código fora das vistas (widget, agendador de notificações).
 struct AppSettings: Equatable, Sendable {
+    /// Contactos por dia útil. É o único objetivo diário: as reuniões contam-se à semana.
+    var goalContactosDia: Int = 12
     var goalPrimeirasReunioes: Int = 10
     var goalSegundasReunioes: Int = 8
     var goalTerceirasReunioes: Int = 4
@@ -64,6 +67,9 @@ struct AppSettings: Equatable, Sendable {
     static var current: AppSettings {
         let d = UserDefaults.shared
         var s = AppSettings()
+        if d.object(forKey: SettingsKey.goalContactosDia) != nil {
+            s.goalContactosDia = d.integer(forKey: SettingsKey.goalContactosDia)
+        }
         if d.object(forKey: SettingsKey.goalPrimeirasReunioes) != nil {
             s.goalPrimeirasReunioes = d.integer(forKey: SettingsKey.goalPrimeirasReunioes)
         }

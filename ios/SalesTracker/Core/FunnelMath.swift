@@ -1,43 +1,61 @@
 import Foundation
 
-/// Um passo do funil comercial, da primeira chamada ao contrato.
+/// Os passos do funil que têm preço no Painel: o contacto e as reuniões realizadas.
+///
+/// As marcadas ficam de fora de propósito: o que produz valor é a reunião que acontece,
+/// e uma marcada que cai não vale nada.
 enum FunnelStep: String, CaseIterable, Identifiable, Sendable {
     case contactos
-    case primeirasMarcadas
     case primeirasRealizadas
-    case segundasMarcadas
     case segundasRealizadas
-    case terceirasMarcadas
     case terceirasRealizadas
-    case contratos
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
         case .contactos: "Contacto"
-        case .primeirasMarcadas: "1.ª reunião marcada"
         case .primeirasRealizadas: "1.ª reunião realizada"
-        case .segundasMarcadas: "2.ª reunião marcada"
         case .segundasRealizadas: "2.ª reunião realizada"
-        case .terceirasMarcadas: "3.ª reunião marcada"
         case .terceirasRealizadas: "3.ª reunião realizada"
-        case .contratos: "Contrato fechado"
         }
     }
 
-    /// A métrica diária correspondente. Os contratos só existem no fecho semanal.
-    var metric: Metric? {
+    var metric: Metric {
         switch self {
         case .contactos: .contactos
-        case .primeirasMarcadas: .primeirasReunioesMarcadas
         case .primeirasRealizadas: .primeirasReunioesRealizadas
-        case .segundasMarcadas: .segundasReunioesMarcadas
         case .segundasRealizadas: .segundasReunioesRealizadas
-        case .terceirasMarcadas: .terceirasReunioesMarcadas
         case .terceirasRealizadas: .terceirasReunioesRealizadas
-        case .contratos: nil
         }
+    }
+
+    /// Alvo do mês a partir dos objetivos de atividade: contactos por dia útil, reuniões
+    /// por semana (cinco dias úteis).
+    func monthlyTarget(settings: AppSettings, workdays: Int) -> Int {
+        let weeks = Double(workdays) / 5
+        let value: Double = switch self {
+        case .contactos: Double(settings.goalContactosDia * workdays)
+        case .primeirasRealizadas: Double(settings.goalPrimeirasReunioes) * weeks
+        case .segundasRealizadas: Double(settings.goalSegundasReunioes) * weeks
+        case .terceirasRealizadas: Double(settings.goalTerceirasReunioes) * weeks
+        }
+        return Int(value.rounded())
+    }
+}
+
+enum FunnelCalendar {
+    /// Dias de segunda a sexta dentro do período, inclusive.
+    static func workdays(in month: MonthSpan) -> Int {
+        let cal = WeekMath.calendar
+        var day = month.start
+        var count = 0
+        while day <= month.end {
+            if !cal.isDateInWeekend(day) { count += 1 }
+            guard let next = cal.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        return count
     }
 }
 
@@ -57,13 +75,11 @@ struct FunnelCounts: Equatable, Sendable {
         in month: MonthSpan
     ) -> FunnelCounts {
         let totals = MetricTotals.summing(entries.filter { month.contains($0.date) })
-        let weeks = summaries.filter { month.contains($0.weekStart) }
         var result = FunnelCounts()
-        for step in FunnelStep.allCases {
-            if let metric = step.metric { result[step] = Double(totals[metric]) }
-        }
-        result[.contratos] = Double(weeks.reduce(0) { $0 + $1.contratosFechados })
-        result.valor = weeks.reduce(0) { $0 + $1.valorTotalFechos }
+        for step in FunnelStep.allCases { result[step] = Double(totals[step.metric]) }
+        result.valor = summaries
+            .filter { month.contains($0.weekStart) }
+            .reduce(0) { $0 + $1.valorTotalFechos }
         return result
     }
 
@@ -79,15 +95,15 @@ struct FunnelCounts: Equatable, Sendable {
 enum FunnelSource: Equatable, Sendable {
     /// Meses fechados com valor registado, do mais antigo para o mais recente.
     case historico([MonthSpan])
-    /// Sem histórico: o objetivo mensal repartido pelos objetivos semanais.
+    /// Sem histórico: o objetivo mensal a dividir pelo alvo de atividade do mês.
     case objetivo
 }
 
-/// O funil de referência: quanto vale cada passo e quantos são precisos para o objetivo.
+/// O preço de cada passo do funil: quanto vale um contacto, uma 1.ª reunião realizada…
 ///
-/// "Quanto vale uma chamada" é o valor fechado a dividir pelo número de chamadas que o
-/// produziu. Com meses anteriores, usam-se os números reais desses meses; sem eles, a
-/// referência é o objetivo mensal a dividir pelos objetivos de atividade do mês.
+/// É o valor fechado a dividir pela quantidade desse passo que o produziu. Com meses
+/// anteriores usam-se os números reais deles; sem eles, o objetivo mensal a dividir
+/// pelo alvo de atividade do mês.
 struct FunnelBaseline: Equatable, Sendable {
     let source: FunnelSource
     let reference: FunnelCounts
@@ -116,17 +132,14 @@ struct FunnelBaseline: Equatable, Sendable {
         return FunnelBaseline(source: .objetivo, reference: goalReference(settings: settings, now: now))
     }
 
-    /// O mês "ideal" segundo os objetivos: objetivos semanais vezes as semanas do mês.
-    /// Contactos e reuniões marcadas não têm objetivo, por isso ficam sem preço.
+    /// O mês segundo os objetivos: alvo de atividade do mês e o objetivo mensal em euros.
     static func goalReference(settings: AppSettings, now: Date) -> FunnelCounts {
         let month = WeekMath.commercialMonth(containing: now, closingOn: settings.monthCloseDay)
-        let days = (WeekMath.calendar.dateComponents([.day], from: month.start, to: month.end).day ?? 30) + 1
-        let weeks = Double(days) / 7
+        let workdays = FunnelCalendar.workdays(in: month)
         var r = FunnelCounts()
-        r[.primeirasRealizadas] = Double(settings.goalPrimeirasReunioes) * weeks
-        r[.segundasRealizadas] = Double(settings.goalSegundasReunioes) * weeks
-        r[.terceirasRealizadas] = Double(settings.goalTerceirasReunioes) * weeks
-        r[.contratos] = Double(settings.goalContratosSemana) * weeks
+        for step in FunnelStep.allCases {
+            r[step] = Double(step.monthlyTarget(settings: settings, workdays: workdays))
+        }
         r.valor = Double(settings.goalMensalValor)
         return r
     }
@@ -136,19 +149,5 @@ struct FunnelBaseline: Equatable, Sendable {
         let count = reference[step]
         guard count > 0, reference.valor > 0 else { return nil }
         return reference.valor / count
-    }
-
-    /// Quantos deste passo são precisos para chegar a `goal` euros.
-    func needed(_ step: FunnelStep, forGoal goal: Double) -> Int? {
-        guard let unit = valuePerUnit(step), unit > 0 else { return nil }
-        return Int((goal / unit).rounded(.up))
-    }
-
-    /// Conversão do passo anterior para este (ex.: marcadas / contactos).
-    func conversion(into step: FunnelStep) -> Double? {
-        guard let index = FunnelStep.allCases.firstIndex(of: step), index > 0 else { return nil }
-        let previous = reference[FunnelStep.allCases[index - 1]]
-        guard previous > 0 else { return nil }
-        return reference[step] / previous
     }
 }

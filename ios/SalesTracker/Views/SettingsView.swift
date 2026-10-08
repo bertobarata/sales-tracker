@@ -4,6 +4,8 @@ import SwiftData
 struct SettingsView: View {
     @Environment(\.modelContext) private var context
 
+    @AppStorage(SettingsKey.goalContactosDia, store: .shared)
+    private var goalContactosDia = 12
     @AppStorage(SettingsKey.goalPrimeirasReunioes, store: .shared)
     private var goalPrimeiras = 10
     @AppStorage(SettingsKey.goalSegundasReunioes, store: .shared)
@@ -42,6 +44,14 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section {
+                StepperRow(label: "Contactos por dia", value: $goalContactosDia)
+            } header: {
+                Text("Objetivo diário")
+            } footer: {
+                Text("Conta só os dias úteis. O Painel usa-o para o alvo de contactos do mês.")
+            }
+
             Section("Objetivos da semana") {
                 StepperRow(label: "1as reuniões realizadas", value: $goalPrimeiras)
                 StepperRow(label: "2as reuniões realizadas", value: $goalSegundas)
