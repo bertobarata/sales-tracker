@@ -1,9 +1,15 @@
 import SwiftUI
 import SwiftData
+import StoreKit
 
 struct WeeklyReportView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.requestReview) private var requestReview
+    // Rating prompt: only after the user has got real value (a third weekly report
+    // copied), and at most once per app version. iOS still caps it at three a year.
+    @AppStorage("reportsCopied") private var reportsCopied = 0
+    @AppStorage("reviewRequestedVersion") private var reviewRequestedVersion = ""
     @Query private var allEntries: [DailyEntry]
     @Query(sort: \WeeklySummary.weekStart) private var allSummaries: [WeeklySummary]
 
@@ -80,6 +86,8 @@ struct WeeklyReportView: View {
                     Button {
                         UIPasteboard.general.string = reportText
                         didCopy = true
+                        reportsCopied += 1
+                        askForReviewIfEarned()
                     } label: {
                         Label(didCopy ? "Copiado!" : "Copiar texto", systemImage: "doc.on.doc")
                     }
@@ -145,6 +153,17 @@ struct WeeklyReportView: View {
         editToken = UUID()
         didCopy = false
         exportURL = nil
+    }
+
+    private func askForReviewIfEarned() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        guard reportsCopied >= 3, reviewRequestedVersion != version else { return }
+        reviewRequestedVersion = version
+        Task {
+            // Let the "Copiado!" feedback land before the system sheet appears.
+            try? await Task.sleep(for: .seconds(1))
+            requestReview()
+        }
     }
 
     private func load() {
