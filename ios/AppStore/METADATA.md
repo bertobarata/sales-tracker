@@ -28,6 +28,22 @@ Copiar campo a campo para o App Store Connect. Idioma principal: **Português (P
 > **O bundle ID, o App Group e o contentor CloudKit não mudaram** — mudá-los partia a
 > sincronização de quem já tivesse dados. O SKU também não: é imutável e só interno.
 
+## ASO 1.1 (proposta 2026-10-08, aplicar quando a 1.1 estiver em "Prepare for Submission")
+
+Título, subtítulo e keywords são os três campos que a Apple indexa, e só se mudam com uma versão nova.
+
+| Campo | Atual (1.0) | 1.1 | Limite |
+|---|---|---|---|
+| Nome | `Meet Tracker` (12) | `Meet Tracker: Vendas e Metas` (28) | 30 |
+| Subtítulo | `Registo diário de atividade` (27) | `Reuniões e relatório semanal` (28) | 30 |
+| Keywords | 91, repete "atividade" | `comercial,atividade,objetivos,crm,prospeção,consultor,clientes,agenda,produtividade,leads,kpi,funil` (99) | 100 |
+
+- O título tinha 18 caracteres por usar, e o título é o campo com mais peso.
+- Nenhuma palavra se repete entre os três campos. A Apple combina palavras de campos diferentes ("vendas" + "comercial", "reuniões" + "semanal").
+- Dados do ASO Scout (loja PT): "meet tracker" está em #6 com popularidade 5; "meet" tem 61 e "tracker" tem 35, mas a app não aparece em nenhuma das duas. O funil "5373 impressões" no site é um exemplo deles, não são dados nossos.
+- A loja dos EUA mostra a categoria em vez do subtítulo, porque não há localização em inglês. Opcional: en-GB/en-US com `Meet Tracker: Sales Goals` e `Meetings & weekly report`.
+- Medir 2 a 4 semanas depois em App Store Connect → Analytics (impressões → visualizações → downloads) antes de mexer outra vez.
+
 ## URLs
 
 | Campo | Valor |
