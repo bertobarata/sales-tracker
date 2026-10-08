@@ -4,7 +4,7 @@ import SwiftData
 struct RootView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
-    @State private var selection: Screen = .hoje
+    @State private var selection: Screen = .painel
 
     @AppStorage(SettingsKey.onboardingCompletedVersion, store: .shared)
     private var onboardingCompletedVersion = 0
@@ -14,11 +14,14 @@ struct RootView: View {
 
     /// Nome próprio para não tapar o `Tab` do SwiftUI usado abaixo.
     enum Screen: Hashable {
-        case hoje, semana, relatorio, tendencias
+        case painel, hoje, semana, relatorio, tendencias
     }
 
     var body: some View {
         TabView(selection: $selection) {
+            Tab("Painel", systemImage: "gauge.with.dots.needle.50percent", value: Screen.painel) {
+                FunnelView()
+            }
             Tab("Hoje", systemImage: "square.and.pencil", value: Screen.hoje) {
                 DailyInputView()
             }
