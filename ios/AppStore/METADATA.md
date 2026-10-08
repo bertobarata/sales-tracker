@@ -28,7 +28,7 @@ Copiar campo a campo para o App Store Connect. Idioma principal: **Português (P
 > **O bundle ID, o App Group e o contentor CloudKit não mudaram** — mudá-los partia a
 > sincronização de quem já tivesse dados. O SKU também não: é imutável e só interno.
 
-## ASO 1.1 (proposta 2026-10-08, aplicar quando a 1.1 estiver em "Prepare for Submission")
+## ASO 1.1 (aprovado pelo Berto 2026-10-08, aplicar quando a 1.1 estiver em "Prepare for Submission")
 
 Título, subtítulo e keywords são os três campos que a Apple indexa, e só se mudam com uma versão nova.
 
